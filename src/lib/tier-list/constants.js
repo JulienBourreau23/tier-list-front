@@ -43,6 +43,12 @@ export const TABS = [
     icon: "🌑✨",
     apiUrl: `${API}/api/monsters?stars=5&elements=Light,Dark&limit=500`,
   },
+  {
+    id: "2a",
+    label: "2 Awakening",
+    icon: "🌑✨🔥💨💧",
+    apiUrl: `${API}/api/monsters?awaken_level=2`,
+  },
 ];
 
 export const DEFAULT_TIERS = [
