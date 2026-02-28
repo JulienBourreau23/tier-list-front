@@ -29,17 +29,18 @@ function MonsterChip({ monster, tierId }) {
         if (e.key === "Enter") handleRemove();
       }}
       title={`${monster.nom_en} — clic pour retirer`}
-      className="flex w-[60px] flex-shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--accent)] px-1.5 py-1.5 font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
+      className="flex min-w-[56px] max-w-[80px] flex-shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--accent)] px-1.5 py-1.5 font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
     >
       <Image
+        data-monster-icon
         src={getIconUrl(monster.com2us_id)}
         alt={monster.nom_en}
         width={40}
         height={40}
-        className="rounded-lg"
+        className="rounded-lg flex-shrink-0"
         unoptimized
       />
-      <span className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-[9px] font-bold text-[var(--muted-foreground)]">
+      <span className="w-full text-center text-[9px] font-bold text-[var(--muted-foreground)] leading-tight line-clamp-2 break-words">
         {monster.nom_en}
       </span>
     </button>
@@ -83,6 +84,8 @@ export default function TierCard({ tier, index, total }) {
 
   return (
     <div
+      data-tier-id={tier.id}
+      data-tier-color={tier.color}
       className="w-full overflow-hidden rounded-2xl bg-[var(--card)] transition-transform duration-150 hover:-translate-y-px"
       style={{
         border: `1px solid ${tier.color}55`,
@@ -92,10 +95,11 @@ export default function TierCard({ tier, index, total }) {
       <div className="flex items-stretch">
         {/* Label */}
         <div
-          className="flex w-20 flex-shrink-0 items-center justify-center border-r border-[var(--border)] p-3"
+          className="flex w-35 flex-shrink-0 items-center justify-center border-r border-[var(--border)] p-3"
           style={{ background: `${tier.color}18` }}
         >
           <span
+            data-tier-label
             className="break-words text-center text-sm font-extrabold leading-snug"
             style={{ color: tier.color, textShadow: `0 0 12px ${tier.glow}cc` }}
           >

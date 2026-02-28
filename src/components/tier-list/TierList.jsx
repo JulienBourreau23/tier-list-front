@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useTierList } from "@/components/providers/TierListProvider";
 import { TABS } from "@/lib/tier-list/constants";
 import MonsterPool from "./MonsterPool";
@@ -7,14 +8,184 @@ import TierCard from "./TierCard";
 import TierTabs from "./TierTabs";
 
 export default function TierList() {
-  const { tiers, activeTab, addTier } = useTierList();
+  const { tiers, activeTab, addTier, resetAll } = useTierList();
+  const tierZoneRef = useRef(null);
+  const [exporting, setExporting] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  const handleScreenshot = async () => {
+    setExporting(true);
+    try {
+      // Récupère les données depuis le contexte via le DOM
+      const tierCards = tierZoneRef.current?.querySelectorAll("[data-tier-id]");
+      if (!tierCards?.length) return;
+
+      const LABEL_W = 90;
+      const ROW_H = 80;
+      const ICON_SIZE = 52;
+      const GAP = 8;
+      const PADDING = 10;
+      const TITLE_H = 48;
+
+      // Collecte les données de chaque tier
+      const rows = Array.from(tierCards).map((card) => {
+        const label =
+          card.querySelector("[data-tier-label]")?.textContent || "";
+        const color = card.dataset.tierColor || "#888";
+        const icons = Array.from(
+          card.querySelectorAll("[data-monster-icon]"),
+        ).map((img) => img.src);
+        return { label, color, icons };
+      });
+
+      // Calcule la largeur max
+      const maxIcons = Math.max(...rows.map((r) => r.icons.length), 0);
+      const contentW = Math.max(
+        800,
+        LABEL_W + maxIcons * (ICON_SIZE + GAP) + PADDING * 2,
+      );
+      const canvasH = TITLE_H + rows.length * (ROW_H + 4) + PADDING * 2;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = contentW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext("2d");
+
+      // Background
+      ctx.fillStyle = "#111318";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Titre
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 22px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("🏆 Tier List", canvas.width / 2, 32);
+
+      // Charge une image en promesse
+      const loadImg = (src) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+
+      // Dessine chaque tier
+      for (let i = 0; i < rows.length; i++) {
+        const { label, color, icons } = rows[i];
+        const y = TITLE_H + PADDING + i * (ROW_H + 4);
+
+        // Fond de la ligne
+        ctx.fillStyle = "#1e2028";
+        ctx.beginPath();
+        ctx.roundRect(0, y, contentW, ROW_H, 10);
+        ctx.fill();
+
+        // Bordure colorée à gauche
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(0, y, 6, ROW_H, [10, 0, 0, 10]);
+        ctx.fill();
+
+        // Label
+        ctx.fillStyle = color;
+        ctx.font = "bold 26px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(label, LABEL_W / 2, y + ROW_H / 2);
+
+        // Séparateur vertical
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(LABEL_W, y + 8);
+        ctx.lineTo(LABEL_W, y + ROW_H - 8);
+        ctx.stroke();
+
+        // Icônes des monstres
+        const imgs = await Promise.all(icons.map(loadImg));
+        for (let j = 0; j < imgs.length; j++) {
+          const img = imgs[j];
+          if (!img) continue;
+          const x = LABEL_W + PADDING + j * (ICON_SIZE + GAP);
+          const iy = y + (ROW_H - ICON_SIZE) / 2;
+
+          // Fond rond pour l'icône
+          ctx.fillStyle = "#2a2d36";
+          ctx.beginPath();
+          ctx.roundRect(x, iy, ICON_SIZE, ICON_SIZE, 8);
+          ctx.fill();
+
+          // Clip arrondi pour l'image
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(x, iy, ICON_SIZE, ICON_SIZE, 8);
+          ctx.clip();
+          ctx.drawImage(img, x, iy, ICON_SIZE, ICON_SIZE);
+          ctx.restore();
+        }
+      }
+
+      // Télécharge
+      const link = document.createElement("a");
+      link.download = `tierlist-${activeTab}-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (_err) {
+      // console.error("Export échoué :", err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (confirmReset) {
+      resetAll();
+      setConfirmReset(false);
+    } else {
+      setConfirmReset(true);
+      // Annule la confirmation après 3s si pas cliqué
+      setTimeout(() => setConfirmReset(false), 3000);
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[var(--background)] px-6 py-8 pb-12 text-[var(--foreground)]">
-      {/* Titre */}
-      <h1 className="mb-6 text-3xl font-extrabold tracking-tight text-[var(--foreground)]">
-        🏆 Tier List Summoners War
-      </h1>
+      {/* Titre + actions globales */}
+      <div className="mb-6 flex w-full max-w-[90%] items-center justify-between">
+        <h1 className="text-3xl font-extrabold tracking-tight text-[var(--foreground)]">
+          🏆 Tier List
+        </h1>
+        <div className="flex items-center gap-2">
+          {/* Screenshot */}
+          <button
+            type="button"
+            onClick={handleScreenshot}
+            disabled={exporting}
+            title="Exporter en PNG"
+            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 text-xs font-bold text-[var(--muted-foreground)] transition hover:border-[var(--primary)] hover:text-[var(--foreground)] disabled:opacity-50"
+          >
+            {exporting ? "⏳" : "📷"} {exporting ? "Export..." : "Exporter PNG"}
+          </button>
+
+          {/* Reset */}
+          <button
+            type="button"
+            onClick={handleReset}
+            title="Remettre à zéro"
+            className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
+              confirmReset
+                ? "border-[var(--destructive)] bg-[var(--destructive)]/10 text-[var(--destructive)]"
+                : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--destructive)] hover:text-[var(--destructive)]"
+            }`}
+          >
+            🗑 {confirmReset ? "Confirmer ?" : "Reset"}
+          </button>
+        </div>
+      </div>
 
       {/* Onglets */}
       <div className="mb-5 w-full max-w-[90%]">
@@ -36,8 +207,12 @@ export default function TierList() {
         </button>
       </div>
 
-      {/* Tiers */}
-      <div className="flex w-full max-w-[90%] flex-col gap-3">
+      {/* Zone capturée pour le screenshot */}
+      <div
+        ref={tierZoneRef}
+        data-capture
+        className="flex w-full max-w-[90%] flex-col gap-3 rounded-2xl p-4 bg-[var(--background)]"
+      >
         {tiers.map((tier, index) => (
           <TierCard
             key={tier.id}
@@ -48,9 +223,9 @@ export default function TierList() {
         ))}
       </div>
 
-      {/* Pool de monstres */}
+      {/* Pool de monstres — hors screenshot, remonte les filtres au changement d'onglet */}
       <div className="w-full max-w-[90%]">
-        <MonsterPool />
+        <MonsterPool key={activeTab} />
       </div>
     </div>
   );
