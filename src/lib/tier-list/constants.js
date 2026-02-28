@@ -16,38 +16,37 @@ export const PALETTE = [
   { name: "Blanc", color: "#e2e8f0", glow: "#ffffff" },
 ];
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
+// Les URLs pointent vers le proxy Next.js — la clé API n'est jamais exposée au navigateur
 export const TABS = [
   {
     id: "nat4-fwe",
     label: "4★ Feu / Vent / Eau",
     icon: "🔥💨💧",
-    apiUrl: `${API}/api/monsters?stars=4&elements=Fire,Water,Wind&limit=500`,
+    apiUrl: "/api/monsters?stars=4&elements=Fire,Water,Wind&limit=500",
   },
   {
     id: "nat4-dl",
     label: "4★ Ténèbre / Lumière",
     icon: "🌑✨",
-    apiUrl: `${API}/api/monsters?stars=4&elements=Light,Dark&limit=500`,
+    apiUrl: "/api/monsters?stars=4&elements=Light,Dark&limit=500",
   },
   {
     id: "nat5-fwe",
     label: "5★ Feu / Vent / Eau",
     icon: "🔥💨💧",
-    apiUrl: `${API}/api/monsters?stars=5&elements=Fire,Water,Wind&limit=500`,
+    apiUrl: "/api/monsters?stars=5&elements=Fire,Water,Wind&limit=500",
   },
   {
     id: "nat5-dl",
     label: "5★ Ténèbre / Lumière",
     icon: "🌑✨",
-    apiUrl: `${API}/api/monsters?stars=5&elements=Light,Dark&limit=500`,
+    apiUrl: "/api/monsters?stars=5&elements=Light,Dark&limit=500",
   },
   {
     id: "2a",
-    label: "2 Awakening",
-    icon: "🌑✨🔥💨💧",
-    apiUrl: `${API}/api/monsters?awaken_level=2`,
+    label: "2 Awakenning",
+    icon: "🔥💨💧🌑✨",
+    apiUrl: "/api/monsters?awaken_level=2",
   },
 ];
 

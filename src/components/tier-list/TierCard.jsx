@@ -4,9 +4,8 @@ import Image from "next/image";
 import { useTierList } from "@/components/providers/TierListProvider";
 import TierEditPanel from "./TierEditPanel";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 function getIconUrl(com2us_id) {
-  return `${API}/icons/${com2us_id}.png`;
+  return `/api/icons/${com2us_id}.png`;
 }
 
 // Reçoit l'objet monstre complet — pas besoin de chercher dans le cache
