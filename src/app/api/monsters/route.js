@@ -1,13 +1,7 @@
-// src/app/api/monsters/route.js
-// Proxy entre le navigateur et FastAPI.
-// La clé API ne quitte jamais le serveur Next.js.
-
 const API = process.env.API_URL || "http://localhost:8000";
 const API_KEY = process.env.API_SECRET_KEY;
 
 export async function GET(request) {
-  // Récupère les query params de la requête entrante
-  // ex: /api/monsters?stars=4&elements=Fire,Water,Wind
   const { searchParams } = new URL(request.url);
   const queryString = searchParams.toString();
 

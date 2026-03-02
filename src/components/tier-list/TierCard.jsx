@@ -29,7 +29,7 @@ function MonsterChip({ monster, tierId }) {
         if (e.key === "Enter") handleRemove();
       }}
       title={`${monster.nom_en} — clic pour retirer`}
-      className="flex min-w-[56px] max-w-[80px] flex-shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--accent)] px-1.5 py-1.5 font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
+      className="flex min-w-14 max-w-20 shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-border bg-accent px-1.5 py-1.5 font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
     >
       <Image
         data-monster-icon
@@ -37,10 +37,10 @@ function MonsterChip({ monster, tierId }) {
         alt={monster.nom_en}
         width={40}
         height={40}
-        className="rounded-lg flex-shrink-0"
+        className="rounded-lg shrink-0"
         unoptimized
       />
-      <span className="w-full text-center text-[9px] font-bold text-[var(--muted-foreground)] leading-tight line-clamp-2 break-words">
+      <span className="w-full text-center text-[9px] font-bold text-muted-foreground leading-tight line-clamp-2 wrap-break-word">
         {monster.nom_en}
       </span>
     </button>
@@ -86,7 +86,7 @@ export default function TierCard({ tier, index, total }) {
     <div
       data-tier-id={tier.id}
       data-tier-color={tier.color}
-      className="w-full overflow-hidden rounded-2xl bg-[var(--card)] transition-transform duration-150 hover:-translate-y-px"
+      className="w-full overflow-hidden rounded-2xl bg-card transition-transform duration-150 hover:-translate-y-px"
       style={{
         border: `1px solid ${tier.color}55`,
         boxShadow: `0 0 20px ${tier.glow}25, 0 0 6px ${tier.color}30`,
@@ -95,12 +95,12 @@ export default function TierCard({ tier, index, total }) {
       <div className="flex items-stretch">
         {/* Label */}
         <div
-          className="flex w-35 flex-shrink-0 items-center justify-center border-r border-[var(--border)] p-3"
+          className="flex w-35 shrink-0 items-center justify-center border-r border-border p-3"
           style={{ background: `${tier.color}18` }}
         >
           <span
             data-tier-label
-            className="break-words text-center text-sm font-extrabold leading-snug"
+            className="wrap-break-word text-center text-sm font-extrabold leading-snug"
             style={{ color: tier.color, textShadow: `0 0 12px ${tier.glow}cc` }}
           >
             {tier.label}
@@ -110,12 +110,12 @@ export default function TierCard({ tier, index, total }) {
         {/* Zone de drop */}
         <section
           aria-label={`Zone de dépôt tier ${tier.label}`}
-          className="flex min-h-[72px] flex-1 flex-wrap items-center gap-2 p-3 transition-colors hover:bg-[var(--primary)]/5"
+          className="flex min-h-18 flex-1 flex-wrap items-center gap-2 p-3 transition-colors hover:bg-(--primary)/5"
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         >
           {monsters.length === 0 ? (
-            <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted-foreground)] opacity-40">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">
               Déposer ici
             </span>
           ) : (
@@ -126,10 +126,10 @@ export default function TierCard({ tier, index, total }) {
         </section>
 
         {/* Contrôles */}
-        <div className="flex flex-shrink-0 flex-col items-center justify-center gap-0.5 border-l border-[var(--border)] p-2">
+        <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border p-2">
           <button
             type="button"
-            className="rounded px-1.5 py-1 text-sm text-[var(--muted-foreground)] transition hover:bg-[var(--accent)] hover:text-[var(--foreground)] disabled:opacity-20"
+            className="rounded px-1.5 py-1 text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground disabled:opacity-20"
             onClick={() => moveUp(index)}
             disabled={index === 0}
             title="Monter"
@@ -138,7 +138,7 @@ export default function TierCard({ tier, index, total }) {
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-1 text-sm transition hover:bg-[var(--accent)]"
+            className="rounded px-1.5 py-1 text-sm transition hover:bg-accent"
             onClick={handleToggleEdit}
             title="Paramètres"
             style={{
@@ -149,7 +149,7 @@ export default function TierCard({ tier, index, total }) {
           </button>
           <button
             type="button"
-            className="rounded px-1.5 py-1 text-sm text-[var(--muted-foreground)] transition hover:bg-[var(--accent)] hover:text-[var(--foreground)] disabled:opacity-20"
+            className="rounded px-1.5 py-1 text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground disabled:opacity-20"
             onClick={() => moveDown(index)}
             disabled={index === total - 1}
             title="Descendre"

@@ -153,10 +153,10 @@ export default function TierList() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-[var(--background)] px-6 py-8 pb-12 text-[var(--foreground)]">
+    <div className="flex min-h-screen flex-col items-center bg-background px-6 py-8 pb-12 text-foreground">
       {/* Titre + actions globales */}
       <div className="mb-6 flex w-full max-w-[90%] items-center justify-between">
-        <h1 className="text-3xl font-extrabold tracking-tight text-[var(--foreground)]">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           🏆 Tier List
         </h1>
         <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export default function TierList() {
             onClick={handleScreenshot}
             disabled={exporting}
             title="Exporter en PNG"
-            className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 text-xs font-bold text-[var(--muted-foreground)] transition hover:border-[var(--primary)] hover:text-[var(--foreground)] disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-muted-foreground transition hover:border-primary hover:text-foreground disabled:opacity-50"
           >
             {exporting ? "⏳" : "📷"} {exporting ? "Export..." : "Exporter PNG"}
           </button>
@@ -178,8 +178,8 @@ export default function TierList() {
             title="Remettre à zéro"
             className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
               confirmReset
-                ? "border-[var(--destructive)] bg-[var(--destructive)]/10 text-[var(--destructive)]"
-                : "border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:border-[var(--destructive)] hover:text-[var(--destructive)]"
+                ? "border-destructive bg-(--destructive)/10 text-destructive"
+                : "border-border bg-card text-muted-foreground hover:border-destructive hover:text-destructive"
             }`}
           >
             🗑 {confirmReset ? "Confirmer ?" : "Reset"}
@@ -194,12 +194,12 @@ export default function TierList() {
 
       {/* Sous-header */}
       <div className="mb-4 flex w-full max-w-[90%] items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           {TABS.find((t) => t.id === activeTab)?.label}
         </span>
         <button
           type="button"
-          className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--card)] px-3.5 py-1.5 text-xs font-bold tracking-wide text-[var(--muted-foreground)] transition hover:border-[var(--primary)] hover:text-[var(--foreground)] hover:shadow-sm"
+          className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold tracking-wide text-muted-foreground transition hover:border-primary hover:text-foreground hover:shadow-sm"
           onClick={addTier}
         >
           <span className="text-base leading-none">＋</span>
@@ -211,7 +211,7 @@ export default function TierList() {
       <div
         ref={tierZoneRef}
         data-capture
-        className="flex w-full max-w-[90%] flex-col gap-3 rounded-2xl p-4 bg-[var(--background)]"
+        className="flex w-full max-w-[90%] flex-col gap-3 rounded-2xl p-4 bg-background"
       >
         {tiers.map((tier, index) => (
           <TierCard

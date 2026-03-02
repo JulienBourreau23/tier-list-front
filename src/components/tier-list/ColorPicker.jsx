@@ -8,7 +8,7 @@ export default function ColorPicker() {
 
   return (
     <div>
-      <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-[var(--muted-foreground)]">
+      <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
         Couleur —{" "}
         <span
           style={{
@@ -24,9 +24,9 @@ export default function ColorPicker() {
           <button
             key={p.color}
             type="button"
-            className={`h-6 w-6 flex-shrink-0 rounded-full border-2 transition-transform duration-150 hover:scale-125 ${
+            className={`h-6 w-6 shrink-0 rounded-full border-2 transition-transform duration-150 hover:scale-125 ${
               editColor.color === p.color
-                ? "scale-110 border-[var(--foreground)]"
+                ? "scale-110 border-foreground"
                 : "border-transparent"
             }`}
             style={{
