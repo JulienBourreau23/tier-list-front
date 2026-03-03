@@ -13,11 +13,18 @@ import { getNextId, makeTiers } from "@/lib/tier-list/utils";
 const TierListContext = createContext(null);
 const STORAGE_KEY = "tierlist-state-v1";
 
+/**
+ * Initialisation des tiers pour chaque onglet
+ * @returns {Object} Un objet avec les tiers initiaux pour chaque onglet
+ */
 function initTiersByTab() {
   return Object.fromEntries(TABS.map((t) => [t.id, makeTiers()]));
 }
 
-// Charge depuis localStorage si disponible
+/**
+ *Charge depuis localStorage si disponible
+ * @returns {object|null} json des monstres dans chaque tier s'il y en a
+ */
 function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -28,7 +35,11 @@ function loadFromStorage() {
   }
 }
 
-// Sauvegarde dans localStorage
+/**
+ * Sauvegarde dans localStorage
+ * @param {Object} tiersByTab - L'ensemble des tier avec la position des monstres
+ * @param {Object} placedMonsters - L'ensemble des monstres placé
+ */
 function saveToStorage(tiersByTab, placedMonsters) {
   try {
     localStorage.setItem(
@@ -40,6 +51,12 @@ function saveToStorage(tiersByTab, placedMonsters) {
   }
 }
 
+/**
+ * Permet l'affichage de la tier list dans le navigateur
+ * @param {React.ReactNode} children - Les composants enfants à envelopper
+ * @return {React.JSX.Element}
+ * @component
+ */
 export function TierListProvider({ children }) {
   const [activeTab, setActiveTab] = useState(TABS[0].id);
   const [tiersByTab, setTiersByTab] = useState(initTiersByTab);
@@ -72,14 +89,27 @@ export function TierListProvider({ children }) {
         typeof updater === "function" ? updater(prev[activeTab]) : updater,
     }));
 
+  /**
+   * Ouvre le panneau d'édition du tier choisi
+   * @param {object} tier - les attributs de l'objet tier
+   * @returns {void}
+   */
   const openEdit = (tier) => {
     setEditingId(tier.id);
     setEditLabel(tier.label);
     setEditColor(PALETTE.find((p) => p.color === tier.color) || PALETTE[0]);
   };
 
+  /**
+   * Fermer la fenetre d'edition d'un tier
+   * @returns {void}
+   */
   const closeEdit = () => setEditingId(null);
 
+  /**
+   * Sauvergarde les modifications d'un tier
+   * @returns {void}
+   */
   const saveEdit = () => {
     setTiers((prev) =>
       prev.map((t) =>
@@ -96,6 +126,11 @@ export function TierListProvider({ children }) {
     closeEdit();
   };
 
+  /**
+   * Fait monter d'un cran le tier décrémentation de 1
+   * @param {number} index - index du tier concerné
+   * @returns {void}
+   */
   const moveUp = (index) => {
     if (index === 0) return;
     setTiers((prev) => {
@@ -105,6 +140,11 @@ export function TierListProvider({ children }) {
     });
   };
 
+  /**
+   * Fait descendre d'un cran le tier incrémentation de 1
+   * @param {number} index - index du tier concerné
+   * @returns {void}
+   */
   const moveDown = (index) => {
     if (index === tiers.length - 1) return;
     setTiers((prev) => {
@@ -114,6 +154,10 @@ export function TierListProvider({ children }) {
     });
   };
 
+  /**
+   * Ajout d'un tier en bas des autres
+   * @returns {void}
+   */
   const addTier = () => {
     const id = getNextId();
     const p = PALETTE[id % PALETTE.length];
@@ -123,11 +167,21 @@ export function TierListProvider({ children }) {
     ]);
   };
 
+  /**
+   * Supprimer le tier choisi
+   * @param {number} id - Id du tier choisi
+   * @returns {void}
+   */
   const deleteTier = (id) => {
     setTiers((prev) => prev.filter((t) => t.id !== id));
     if (editingId === id) closeEdit();
   };
 
+  /**
+   * Place un monstre dans le tier choisi
+   * @param {object} monsterObj - objet monstre, ses informations (id, nom, références images...)
+   * @param {number} tierId - Id du tier choisi pour placer le monstre
+   */
   const placeMonster = (monsterObj, tierId) => {
     const id = String(monsterObj.com2us_id);
     setPlacedMonsters((prev) => {
@@ -144,6 +198,10 @@ export function TierListProvider({ children }) {
     });
   };
 
+  /**
+   * Fonction qui retire un monstre d'un tier
+   * @param {number} monsterId - cible l'Id du monstre à retirer
+   */
   const removeMonster = (monsterId) => {
     setPlacedMonsters((prev) =>
       Object.fromEntries(
@@ -155,8 +213,12 @@ export function TierListProvider({ children }) {
     );
   };
 
-  // Reset complet — remet tout à zéro et efface localStorage
-  // biome-ignore lint/correctness/useExhaustiveDependencies: closeEdit est stable
+  /**
+   * Remet la tier list à zéro : vide les tiers, les monstres placés
+   *  et éfface le localStorage.
+   * @returns {void}
+   */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const resetAll = useCallback(() => {
     setTiersByTab(initTiersByTab());
     setPlacedMonsters({});
@@ -174,6 +236,11 @@ export function TierListProvider({ children }) {
       .map((m) => String(m.com2us_id)),
   );
 
+  /**
+   * Récupère les monstres dans un tier
+   * @param {number} tierId - Id du tier
+   * @returns {object[]}
+   */
   const getMonstersForTier = (tierId) => placedMonsters[tierId] ?? [];
 
   return (
@@ -206,6 +273,11 @@ export function TierListProvider({ children }) {
   );
 }
 
+/**
+ * utilise la tierlist
+ * @returns {Object} retourne la tier list avec l'ensemble des éléments
+ * @throws {Error} Si le hook est utilisé en dehors de <TierListProvider>
+ */
 export function useTierList() {
   const ctx = useContext(TierListContext);
   if (!ctx)

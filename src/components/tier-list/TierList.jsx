@@ -7,12 +7,21 @@ import MonsterPool from "./MonsterPool";
 import TierCard from "./TierCard";
 import TierTabs from "./TierTabs";
 
+/**
+ * Composant principal qui appel aux fonctions des composants enfants pour générer la tierlist
+ * @returns {React.JSX.Element}
+ * @component
+ */
 export default function TierList() {
   const { tiers, activeTab, addTier, resetAll } = useTierList();
   const tierZoneRef = useRef(null);
   const [exporting, setExporting] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
+  /**
+   * permet de générer une image png de la tierlist pour l'utilisateur
+   * @returns {Promise<void>}
+   */
   const handleScreenshot = async () => {
     setExporting(true);
     try {
@@ -61,7 +70,11 @@ export default function TierList() {
       ctx.textAlign = "center";
       ctx.fillText("🏆 Tier List", canvas.width / 2, 32);
 
-      // Charge une image en promesse
+      /**
+       * Permet le chargement d'une image qui est en promesse
+       * @param {string} src - lien de l'image
+       * @returns {Promise<HTMLImageElement|null>}
+       */
       const loadImg = (src) =>
         new Promise((resolve) => {
           const img = new Image();
@@ -141,6 +154,10 @@ export default function TierList() {
     }
   };
 
+  /**
+   * permet le reset de la tierlist et vide le localstorage après double confirmation
+   * @returns {void}
+   */
   const handleReset = () => {
     if (confirmReset) {
       resetAll();

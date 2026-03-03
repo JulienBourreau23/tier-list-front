@@ -4,19 +4,42 @@ import Image from "next/image";
 import { useTierList } from "@/components/providers/TierListProvider";
 import TierEditPanel from "./TierEditPanel";
 
+/**
+ * Récupération de l'icone des monstres
+ * @param {number} com2us_id - id du monstre
+ * @returns {string} Lien vers l'icone du monstre
+ */
 function getIconUrl(com2us_id) {
   return `/api/icons/${com2us_id}.png`;
 }
 
+/**
+ * Icône draggable d'un monstre, permet de le glisser vers un tier
+ * ou de le retirer en cliquant dessus.
+ * @param {object} props - les props du composant (id, nom, element...)
+ * @param {Object} props.monster - props du monstre sélectionné (id, nom, element...)
+ * @param {number} props.tierId - Id du tier contenant le monstre
+ * @returns {React.JSX.Element}
+ * @component
+ */
 // Reçoit l'objet monstre complet — pas besoin de chercher dans le cache
 function MonsterChip({ monster, tierId }) {
   const { removeMonster } = useTierList();
 
+  /**
+   * Permet le départ du monstre depuis sa position
+   * @param {DragEvent} e - Stock les information du monstre lors de l'evenement
+   * @returns {void}
+   */
   const handleDragStart = (e) => {
     e.dataTransfer.setData("monsterJson", JSON.stringify(monster));
     e.dataTransfer.setData("fromTierId", tierId);
   };
 
+  /**
+   * Permet de retirer le monstre de sa position
+   * @returns {void}
+   */
   const handleRemove = () => removeMonster(monster.com2us_id);
 
   return (
@@ -47,6 +70,16 @@ function MonsterChip({ monster, tierId }) {
   );
 }
 
+/**
+ * Permet la gestion des tier, affichage titre, monstres placés à l'intérieur, déplacement des monstres,
+ * et la modification des tier
+ * @param {object} props - propriété des tiers (id, titre, liste des monstres...)
+ * @param {object} props.tier - propriété du tier choisi
+ * @param {number} props.index - index du tier
+ * @param {number} props.total - nombre total de tier
+ * @returns {React.JSX.Element}
+ * @component
+ */
 export default function TierCard({ tier, index, total }) {
   const {
     editingId,
@@ -61,8 +94,18 @@ export default function TierCard({ tier, index, total }) {
   const isEditing = editingId === tier.id;
   const monsters = getMonstersForTier(tier.id);
 
+  /**
+   * Permet de drag and drop sans recharger la page
+   * @param {DragEvent} e - Empêche le fonctionnement par défaut
+   * @returns {void}
+   */
   const handleDragOver = (e) => e.preventDefault();
 
+  /**
+   * Fait le transfert de l'objet monstre du composant A au composant B
+   * @param {DragEvent} e - Transfert les données
+   * @returns {void}
+   */
   const handleDrop = (e) => {
     e.preventDefault();
     // Essaie de récupérer l'objet complet
@@ -77,6 +120,10 @@ export default function TierCard({ tier, index, total }) {
     }
   };
 
+  /**
+   * Ouvre ou ferme la fenêtre édition du tier en fonction de son état
+   * @returns {void}
+   */
   const handleToggleEdit = () => {
     if (isEditing) closeEdit();
     else openEdit(tier);
