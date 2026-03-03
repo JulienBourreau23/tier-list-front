@@ -1,25 +1,26 @@
+import ky, { HTTPError } from "ky";
+
 const API = process.env.API_URL || "http://localhost:8000";
 const API_KEY = process.env.API_SECRET_KEY;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const queryString = searchParams.toString();
 
-  const headers = { "Content-Type": "application/json" };
-  if (API_KEY) headers["X-API-Key"] = API_KEY;
-
-  const res = await fetch(`${API}/api/monsters?${queryString}`, { headers });
-
-  if (!res.ok) {
-    return new Response(JSON.stringify({ error: "Erreur API" }), {
-      status: res.status,
-      headers: { "Content-Type": "application/json" },
-    });
+  try {
+    const data = await ky
+      .get(`${API}/api/monsters`, {
+        searchParams,
+        headers: API_KEY ? { "X-API-Key": API_KEY } : {},
+      })
+      .json();
+    return Response.json(data);
+  } catch (error) {
+    if (error instanceof HTTPError) {
+      return Response.json(
+        { error: "Erreur API" },
+        { status: error.response.status },
+      );
+    }
+    return Response.json({ error: "Erreur Serveur" }, { status: 500 });
   }
-
-  const data = await res.json();
-  return new Response(JSON.stringify(data), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
 }

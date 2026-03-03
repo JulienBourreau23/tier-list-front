@@ -22,31 +22,31 @@ export const TABS = [
     id: "nat4-fwe",
     label: "4★ Feu / Vent / Eau",
     icon: "🔥💨💧",
-    apiUrl: "/api/monsters?stars=4&elements=Fire,Water,Wind&limit=500",
+    apiUrl: "monsters?stars=4&elements=Fire,Water,Wind&limit=500",
   },
   {
     id: "nat4-dl",
     label: "4★ Ténèbre / Lumière",
     icon: "🌑✨",
-    apiUrl: "/api/monsters?stars=4&elements=Light,Dark&limit=500",
+    apiUrl: "monsters?stars=4&elements=Light,Dark&limit=500",
   },
   {
     id: "nat5-fwe",
     label: "5★ Feu / Vent / Eau",
     icon: "🔥💨💧",
-    apiUrl: "/api/monsters?stars=5&elements=Fire,Water,Wind&limit=500",
+    apiUrl: "monsters?stars=5&elements=Fire,Water,Wind&limit=500",
   },
   {
     id: "nat5-dl",
     label: "5★ Ténèbre / Lumière",
     icon: "🌑✨",
-    apiUrl: "/api/monsters?stars=5&elements=Light,Dark&limit=500",
+    apiUrl: "monsters?stars=5&elements=Light,Dark&limit=500",
   },
   {
     id: "2a",
     label: "2 Awakenning",
     icon: "🔥💨💧🌑✨",
-    apiUrl: "/api/monsters?awaken_level=2",
+    apiUrl: "monsters?awaken_level=2",
   },
 ];
 

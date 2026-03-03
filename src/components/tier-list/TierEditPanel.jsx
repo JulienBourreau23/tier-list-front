@@ -9,7 +9,6 @@ import ColorPicker from "./ColorPicker";
  *  Doit être utilisé dans `TierCard.jsx`.
  * @param tier props.tier - Le tier en cours d'édition
  * @returns {React.JSX.Element} Le panneau d'édition du tier
-
  */
 export default function TierEditPanel({ tier }) {
   const {
