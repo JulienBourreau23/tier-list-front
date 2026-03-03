@@ -4,6 +4,12 @@ import { useTierList } from "@/components/providers/TierListProvider";
 import { TABS } from "@/lib/tier-list/constants";
 import { cn } from "@/lib/utils";
 
+/**
+ * Affiche les onglets de navigation entre les catégories de monstres
+ * et gère le changement d'onglet actif.
+ * @returns {React.JSX.Element} La barre d'onglets de la tier list
+ * @constructor
+ */
 export default function TierTabs() {
   const { activeTab, setActiveTab, closeEdit } = useTierList();
 

@@ -3,6 +3,12 @@
 import { useTierList } from "@/components/providers/TierListProvider";
 import { PALETTE } from "@/lib/tier-list/constants";
 
+/**
+ * Affiche une palette de couleurs et permet à l'utilisateur
+ * de choisir la couleur du tier en cours d'édition.
+ * @returns {React.JSX.Element} La palette de couleurs interactive
+ * @constructor
+ */
 export default function ColorPicker() {
   const { editColor, setEditColor } = useTierList();
 

@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
  * @param {number|string} com2us_id - L'identifiant Com2uS du monstre
  * @returns {string} L'URL de l'image PNG
  */
-
 function getIconUrl(com2us_id) {
   return `/api/icons/${com2us_id}.png`;
 }
@@ -32,7 +31,6 @@ function getIconUrl(com2us_id) {
  * Map des filtres d'éléments disponibles par onglet.
  * @type {Record<TabId, ElementFilter[]>}
  */
-
 const ELEMENTS_BY_TAB = {
   "nat4-fwe": [
     { id: "Fire", label: "Feu", emoji: "🔥" },
@@ -70,7 +68,6 @@ const ELEMENTS_BY_TAB = {
  * @param {Monster} props.monster - Le monstre à afficher
  * @returns {JSX.Element}
  */
-
 function MonsterIcon({ monster }) {
   const iconUrl = getIconUrl(monster.com2us_id);
 
