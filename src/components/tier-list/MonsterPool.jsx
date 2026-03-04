@@ -258,7 +258,6 @@ export default function MonsterPool() {
           </div>
         )}
       </div>
-      ;
     </div>
   );
 }
