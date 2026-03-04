@@ -1,5 +1,5 @@
 // src/app/api/monsters/[id]/route.js
-// Proxy pour un monstre par com2us_id
+// Proxy pour récupérer les données JSON d'un monstre par son com2us_id
 import ky, { HTTPError } from "ky";
 
 const API = process.env.API_URL || "http://localhost:8000";
@@ -9,18 +9,20 @@ export async function GET(_request, { params }) {
   const { id } = await params;
 
   try {
-    const imageBuffer = await ky
-      .get(`${API}/icons/${id}`, {
+    const data = await ky
+      .get(`${API}/api/monsters/${id}`, {
         headers: API_KEY ? { "X-API-Key": API_KEY } : {},
       })
-      .arrayBuffer();
-    return new Response(imageBuffer, {
-      headers: { "Content-Type": "image/png" },
-    });
+      .json();
+
+    return Response.json(data);
   } catch (error) {
     if (error instanceof HTTPError) {
-      return new Response(null, { status: 404 });
+      return Response.json(
+        { error: "Monstre introuvable" },
+        { status: error.response.status },
+      );
     }
-    return new Response(null, { status: 500 });
+    return Response.json({ error: "Erreur serveur" }, { status: 500 });
   }
 }

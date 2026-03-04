@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useTierList } from "@/components/providers/TierListProvider";
+import { useTierListStore } from "@/lib/tier-list/store";
 import TierEditPanel from "./TierEditPanel";
 
 /**
@@ -14,17 +14,17 @@ function getIconUrl(com2us_id) {
 }
 
 /**
- * Icône draggable d'un monstre, permet de le glisser vers un tier
- * ou de le retirer en cliquant dessus.
- * @param {object} props - les props du composant (id, nom, element...)
- * @param {Object} props.monster - props du monstre sélectionné (id, nom, element...)
+ * Icône draggable d'un monstre placé dans un tier.
+ * Peut être glissée vers un autre tier via drag-and-drop.
+ * Un clic retire le monstre de son tier via `removeMonster` du store.
+ * @param {Object} props
+ * @param {import('@/lib/tier-list/store').Monster} props.monster - Le monstre à afficher
  * @param {number} props.tierId - Id du tier contenant le monstre
  * @returns {React.JSX.Element}
- * @component
  */
 // Reçoit l'objet monstre complet — pas besoin de chercher dans le cache
 function MonsterChip({ monster, tierId }) {
-  const { removeMonster } = useTierList();
+  const removeMonster = useTierListStore((state) => state.removeMonster);
 
   /**
    * Permet le départ du monstre depuis sa position
@@ -81,18 +81,15 @@ function MonsterChip({ monster, tierId }) {
  * @component
  */
 export default function TierCard({ tier, index, total }) {
-  const {
-    editingId,
-    openEdit,
-    closeEdit,
-    moveUp,
-    moveDown,
-    placeMonster,
-    getMonstersForTier,
-  } = useTierList();
-
+  const editingId = useTierListStore((state) => state.editingId);
+  const openEdit = useTierListStore((state) => state.openEdit);
+  const closeEdit = useTierListStore((state) => state.closeEdit);
+  const moveUp = useTierListStore((state) => state.moveUp);
+  const moveDown = useTierListStore((state) => state.moveDown);
+  const placedMonsters = useTierListStore((state) => state.placedMonsters);
+  const placeMonster = useTierListStore((state) => state.placeMonster);
+  const monsters = placedMonsters[tier.id] ?? [];
   const isEditing = editingId === tier.id;
-  const monsters = getMonstersForTier(tier.id);
 
   /**
    * Permet de drag and drop sans recharger la page

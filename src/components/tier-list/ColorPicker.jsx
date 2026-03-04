@@ -1,7 +1,7 @@
 "use client";
 
-import { useTierList } from "@/components/providers/TierListProvider";
 import { PALETTE } from "@/lib/tier-list/constants";
+import { useTierListStore } from "@/lib/tier-list/store";
 
 /**
  * Affiche une palette de couleurs et permet à l'utilisateur
@@ -10,7 +10,8 @@ import { PALETTE } from "@/lib/tier-list/constants";
  * @constructor
  */
 export default function ColorPicker() {
-  const { editColor, setEditColor } = useTierList();
+  const editColor = useTierListStore((state) => state.editColor);
+  const setEditColor = useTierListStore((state) => state.setEditColor);
 
   return (
     <div>

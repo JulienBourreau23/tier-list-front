@@ -1,8 +1,7 @@
 import { DEFAULT_TIERS } from "./constants";
-
 /**
  * Crée une copie indépendante des tiers par défaut.
- * @returns {*} Retourne un tableau d'objet qui revoit chaque tier de la tier-list (exemple objet tier a avec id, label, color, glow)
+ * @returns {import('./constants').Tier[]} Tableau de tiers avec id, label, color et glow
  */
 export function makeTiers() {
   return DEFAULT_TIERS.map((t) => ({ ...t }));

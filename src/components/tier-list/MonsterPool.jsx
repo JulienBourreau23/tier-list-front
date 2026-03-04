@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { useTierList } from "@/components/providers/TierListProvider";
+import { useTierListStore } from "@/lib/tier-list/store";
 import { useMonsters } from "@/lib/tier-list/useMonsters";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ function getIconUrl(com2us_id) {
 }
 
 /**
- * @typedef {"nat4-fwe"|"nat4-dl"|"nat5-fwe"|"nat5-dl"} TabId
+ * @typedef {"nat4-fwe"|"nat4-dl"|"nat5-fwe"|"nat5-dl"|"2a"} TabId
  * Identifiant d'un onglet de la tier list.
  */
 
@@ -47,6 +47,13 @@ const ELEMENTS_BY_TAB = {
     { id: "Wind", label: "Vent", emoji: "💨" },
   ],
   "nat5-dl": [
+    { id: "Light", label: "Lumière", emoji: "✨" },
+    { id: "Dark", label: "Ténèbre", emoji: "🌑" },
+  ],
+  "2a": [
+    { id: "Fire", label: "Feu", emoji: "🔥" },
+    { id: "Water", label: "Eau", emoji: "💧" },
+    { id: "Wind", label: "Vent", emoji: "💨" },
     { id: "Light", label: "Lumière", emoji: "✨" },
     { id: "Dark", label: "Ténèbre", emoji: "🌑" },
   ],
@@ -108,7 +115,7 @@ function MonsterIcon({ monster }) {
  * - le drag-and-drop vers les tiers
  *
  * Les données sont récupérées via `useMonsters(activeTab)` et les monstres
- * déjà placés sont exclus grâce à `placedIds` fourni par `useTierList`.
+ * déjà placés sont exclus grâce à `placedIds` dérivé de `useTierListStore`.
  *
  * @returns {JSX.Element}
  *
@@ -121,7 +128,17 @@ function MonsterIcon({ monster }) {
  */
 
 export default function MonsterPool() {
-  const { activeTab, placedIds } = useTierList();
+  const activeTab = useTierListStore((state) => state.activeTab);
+  const placedMonsters = useTierListStore((state) => state.placedMonsters);
+  const placedIds = useMemo(
+    () =>
+      new Set(
+        Object.values(placedMonsters ?? {})
+          .flat()
+          .map((m) => String(m.com2us_id)),
+      ),
+    [placedMonsters],
+  );
   const { data, isLoading, isError } = useMonsters(activeTab);
   const [search, setSearch] = useState("");
   const [activeElement, setActiveElement] = useState(null);

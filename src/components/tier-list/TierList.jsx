@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTierList } from "@/components/providers/TierListProvider";
 import { TABS } from "@/lib/tier-list/constants";
+import { useTierListStore } from "@/lib/tier-list/store";
 import MonsterPool from "./MonsterPool";
 import TierCard from "./TierCard";
 import TierTabs from "./TierTabs";
@@ -13,13 +13,21 @@ import TierTabs from "./TierTabs";
  * @component
  */
 export default function TierList() {
-  const { tiers, activeTab, addTier, resetAll } = useTierList();
+  const tiers = useTierListStore(
+    (state) => state.tiersByTab[state.activeTab] ?? [],
+  );
+  const activeTab = useTierListStore((state) => state.activeTab);
+  const addTier = useTierListStore((state) => state.addTier);
+  const resetAll = useTierListStore((state) => state.resetAll);
   const tierZoneRef = useRef(null);
   const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
   /**
-   * permet de générer une image png de la tierlist pour l'utilisateur
+   * Génère une image PNG de la tier list et la télécharge automatiquement.
+   * Met à jour `exportStatus` à "success" ou "error" selon le résultat,
+   * puis remet à null après 3 secondes.
    * @returns {Promise<void>}
    */
   const handleScreenshot = async () => {
@@ -147,10 +155,12 @@ export default function TierList() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setExportStatus("success");
     } catch (_err) {
-      // console.error("Export échoué :", err);
+      setExportStatus("error");
     } finally {
       setExporting(false);
+      setTimeout(() => setExportStatus(null), 3000);
     }
   };
 
@@ -171,6 +181,20 @@ export default function TierList() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-background px-6 py-8 pb-12 text-foreground">
+      {/* Toast export */}
+      {exportStatus && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold shadow-lg transition-all ${
+            exportStatus === "success"
+              ? "border-green-500 bg-green-500/10 text-green-500"
+              : "border-destructive bg-destructive/10 text-destructive"
+          }`}
+        >
+          {exportStatus === "success"
+            ? "✅ Export réussi !"
+            : "❌ Export échoué"}
+        </div>
+      )}
       {/* Titre + actions globales */}
       <div className="mb-6 flex w-full max-w-[90%] items-center justify-between">
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">

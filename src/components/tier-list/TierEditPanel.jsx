@@ -1,24 +1,23 @@
 "use client";
 
-import { useTierList } from "@/components/providers/TierListProvider";
+import { useTierListStore } from "@/lib/tier-list/store";
 import ColorPicker from "./ColorPicker";
 
 /**
  * Panneau d'édition d'un tier (label + couleur + actions).
  * Permet de modifier le titre, la couleur, de sauvegarder ou de supprimer le tier.
- *  Doit être utilisé dans `TierCard.jsx`.
- * @param tier props.tier - Le tier en cours d'édition
+ * Doit être utilisé dans `TierCard.jsx`.
+ * @param {Object} props
+ * @param {import('@/lib/tier-list/store').Tier} props.tier - Le tier en cours d'édition
  * @returns {React.JSX.Element} Le panneau d'édition du tier
  */
 export default function TierEditPanel({ tier }) {
-  const {
-    editLabel,
-    editColor,
-    setEditLabel,
-    saveEdit,
-    closeEdit,
-    deleteTier,
-  } = useTierList();
+  const editLabel = useTierListStore((state) => state.editLabel);
+  const editColor = useTierListStore((state) => state.editColor);
+  const setEditLabel = useTierListStore((state) => state.setEditLabel);
+  const saveEdit = useTierListStore((state) => state.saveEdit);
+  const closeEdit = useTierListStore((state) => state.closeEdit);
+  const deleteTier = useTierListStore((state) => state.deleteTier);
 
   return (
     <div className="flex flex-col gap-4 border-t border-border bg-secondary p-4">

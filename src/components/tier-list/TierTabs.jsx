@@ -1,7 +1,7 @@
 "use client";
 
-import { useTierList } from "@/components/providers/TierListProvider";
 import { TABS } from "@/lib/tier-list/constants";
+import { useTierListStore } from "@/lib/tier-list/store";
 import { cn } from "@/lib/utils";
 
 /**
@@ -11,8 +11,9 @@ import { cn } from "@/lib/utils";
  * @constructor
  */
 export default function TierTabs() {
-  const { activeTab, setActiveTab, closeEdit } = useTierList();
-
+  const activeTab = useTierListStore((state) => state.activeTab);
+  const setActiveTab = useTierListStore((state) => state.setActiveTab);
+  const closeEdit = useTierListStore((state) => state.closeEdit);
   return (
     <div className="flex flex-wrap gap-1.5 rounded-2xl border border-border bg-muted p-1.5">
       {TABS.map((tab) => (
