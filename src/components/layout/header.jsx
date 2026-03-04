@@ -2,7 +2,7 @@ import { ThemeButton } from "@/components/layout/theme-button";
 
 export default function Header() {
   return (
-    <header className="absolute top-0 right-0 size-16 ...">
+    <header className="flex w-full items-center justify-end px-6 py-4">
       <ThemeButton />
     </header>
   );

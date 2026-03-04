@@ -180,7 +180,7 @@ export default function TierList() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-background px-6 py-8 pb-12 text-foreground">
+    <div className="flex min-h-screen flex-col items-center bg-background px-6 py-4 pb-12 text-foreground">
       {/* Toast export */}
       {exportStatus && (
         <div
