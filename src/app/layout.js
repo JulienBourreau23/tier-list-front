@@ -19,6 +19,11 @@ export const metadata = {
   title: "Tier-list SW",
   description: "Tier-list summoners war",
 
+  // ✅ Ajout de metadataBase
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+  ),
+
   // Onglet du navigateur + favicon
   icons: { icon: "/favicon.ico" },
 
