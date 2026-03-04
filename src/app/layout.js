@@ -18,6 +18,16 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "Tier-list SW",
   description: "Tier-list summoners war",
+
+  // Onglet du navigateur + favicon
+  icons: { icon: "/favicon.ico" },
+
+  // Quand quelqu'un partage ton lien sur Discord/Twitter
+  openGraph: {
+    title: "Tier-list Summoners War",
+    description: "Classe tes monstres Summoners War",
+    images: ["/og-image.png"], // une image de preview 1200x630px
+  },
 };
 
 export default function RootLayout({ children }) {
