@@ -230,7 +230,7 @@ export default function TierList() {
       <div className="mb-5 w-full max-w-[90%]">
         <TierTabs />
       </div>
-      ;
+
       <div className="mb-4 flex w-full max-w-[90%] items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           {TABS.find((t) => t.id === activeTab)?.label}
@@ -245,7 +245,6 @@ export default function TierList() {
           ＋ Ajouter un tier
         </Button>
       </div>
-      ;
       <div
         ref={tierZoneRef}
         data-capture
@@ -260,11 +259,9 @@ export default function TierList() {
           />
         ))}
       </div>
-      ;
       <div className="w-full max-w-[90%]">
         <MonsterPool key={activeTab} />
       </div>
-      ;
     </div>
   );
 }
