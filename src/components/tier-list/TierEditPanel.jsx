@@ -1,5 +1,6 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,18 +8,21 @@ import { useTierListStore } from "@/lib/tier-list/store";
 import ColorPicker from "./ColorPicker";
 
 /**
- * Détermine si une couleur hex est claire ou sombre.
- * Retourne true si la couleur est claire (texte noir recommandé).
- * @param {string} hex - Couleur en format hex (ex: "#ef4444")
- * @returns {boolean}
+ * Détermine si une couleur CSS est claire ou sombre via getComputedStyle.
+ * Compatible avec les variables CSS (var(--palette-xxx)).
+ * @param {string} color - Couleur CSS (hex ou var())
+ * @returns {boolean} true si la couleur est claire
  */
-function isLightColor(hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  // Formule de luminosité perçue
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6;
+function isLightColor(color) {
+  const temp = document.createElement("div");
+  temp.style.color = color;
+  document.body.appendChild(temp);
+  const computed = getComputedStyle(temp).color;
+  document.body.removeChild(temp);
+  const match = computed.match(/\d+/g);
+  if (!match) return false;
+  const [r, g, b] = match.map(Number);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
 }
 /**
  * Panneau d'édition d'un tier (label + couleur + actions).
@@ -61,7 +65,7 @@ export default function TierEditPanel({ tier }) {
           className="max-w-40 wrap-break-word text-sm font-extrabold leading-snug"
           style={{
             color: editColor.color,
-            textShadow: `0 0 10px ${editColor.glow}bb`,
+            textShadow: `0 0 10px color-mix(in srgb, ${editColor.glow} 73%, transparent)`,
           }}
         >
           {editLabel || "?"}
@@ -77,7 +81,7 @@ export default function TierEditPanel({ tier }) {
           onClick={() => deleteTier(tier.id)}
           className="mr-auto border border-destructive/50 text-destructive hover:border-destructive hover:bg-destructive/10 hover:text-white"
         >
-          🗑 Supprimer
+          <Trash2 /> Supprimer
         </Button>
         <Button
           variant="outline"

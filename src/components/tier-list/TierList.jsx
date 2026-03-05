@@ -1,5 +1,6 @@
 "use client";
 
+import { Camera, Hourglass, Plus, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/lib/show-toast";
@@ -23,7 +24,7 @@ export default function TierList() {
   const resetAll = useTierListStore((state) => state.resetAll);
   const tierZoneRef = useRef(null);
   const [exporting, setExporting] = useState(false);
-  const [exportStatus, setExportStatus] = useState(null);
+  const [_exportStatus, setExportStatus] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
   /**
@@ -157,11 +158,9 @@ export default function TierList() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      setExportStatus("success");
-      showSuccessToast(exportStatus);
+      showSuccessToast();
     } catch (_err) {
-      setExportStatus("error");
-      showErrorToast(exportStatus);
+      showErrorToast();
     } finally {
       setExporting(false);
       setTimeout(() => setExportStatus(null), 3000);
@@ -197,7 +196,8 @@ export default function TierList() {
             title="Exporter en PNG"
             className="border border-border hover:border-primary hover:text-white hover:bg-primary/10"
           >
-            {exporting ? "⏳" : "📷"} {exporting ? "Export..." : "Exporter PNG"}
+            {exporting ? <Hourglass /> : <Camera />}{" "}
+            {exporting ? "Export..." : "Exporter PNG"}
           </Button>
 
           {/* Reset */}
@@ -212,7 +212,7 @@ export default function TierList() {
                 : "border border-border hover:border-destructive hover:text-white hover:bg-transparent"
             }
           >
-            🗑 {confirmReset ? "Confirmer ?" : "Reset"}
+            <Trash2 /> {confirmReset ? "Confirmer ?" : "Reset"}
           </Button>
         </div>
       </div>
@@ -231,7 +231,7 @@ export default function TierList() {
           onClick={addTier}
           className="border border-border hover:border-primary hover:text-white hover:bg-primary/10"
         >
-          ＋ Ajouter un tier
+          <Plus /> Ajouter un tier
         </Button>
       </div>
       <div

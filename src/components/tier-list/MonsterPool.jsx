@@ -1,5 +1,6 @@
 "use client";
 
+import { Search } from "lucide-react";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -212,7 +213,7 @@ export default function MonsterPool() {
         {/* Recherche */}
         <div className="relative flex-1 min-w-40">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
-            🔍
+            <Search />
           </span>
           <label htmlFor="search-monster" className="sr-only">
             Rechercher un monstre

@@ -181,6 +181,37 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+
+  --palette-rouge: #ef4444;
+  --palette-rouge-glow: #ff6b6b;
+  --palette-rose: #ec4899;
+  --palette-rose-glow: #ff80c0;
+  --palette-orange: #f97316;
+  --palette-orange-glow: #ffaa5e;
+  --palette-ambre: #f59e0b;
+  --palette-ambre-glow: #ffd060;
+  --palette-jaune: #eab308;
+  --palette-jaune-glow: #ffe066;
+  --palette-citron: #84cc16;
+  --palette-citron-glow: #b8f04a;
+  --palette-vert: #22c55e;
+  --palette-vert-glow: #6fffaa;
+  --palette-emeraude: #10b981;
+  --palette-emeraude-glow: #5fffc0;
+  --palette-cyan: #06b6d4;
+  --palette-cyan-glow: #5fefff;
+  --palette-bleu-ciel: #38bdf8;
+  --palette-bleu-ciel-glow: #90deff;
+  --palette-bleu: #3b82f6;
+  --palette-bleu-glow: #7db8ff;
+  --palette-indigo: #6366f1;
+  --palette-indigo-glow: #a0a4ff;
+  --palette-violet: #a855f7;
+  --palette-violet-glow: #d09cff;
+  --palette-pourpre: #d946ef;
+  --palette-pourpre-glow: #f0a0ff;
+  --palette-blanc: #e2e8f0;
+  --palette-blanc-glow: #ffffff;
 }
 
 @layer base {

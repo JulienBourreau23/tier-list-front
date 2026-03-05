@@ -1,5 +1,6 @@
 "use client";
 
+import { MoveDown, MoveUp, Settings } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useTierListStore } from "@/lib/tier-list/store";
@@ -138,22 +139,24 @@ export default function TierCard({ tier, index, total }) {
       data-tier-color={tier.color}
       className="w-full overflow-hidden rounded-2xl bg-card transition-transform duration-150 hover:-translate-y-px"
       style={{
-        border: `1px solid ${displayColor}55`,
-        boxShadow: `0 0 20px ${displayGlow}25, 0 0 6px ${displayColor}30`,
+        border: `1px solid color-mix(in srgb, ${displayColor} 33%, transparent)`,
+        boxShadow: `0 0 20px color-mix(in srgb, ${displayGlow} 15%, transparent), 0 0 6px color-mix(in srgb, ${displayColor} 19%, transparent)`,
       }}
     >
       <div className="flex items-stretch">
         {/* Label */}
         <div
           className="flex w-35 shrink-0 items-center justify-center border-r border-border p-3"
-          style={{ background: `${displayColor}18` }}
+          style={{
+            background: `color-mix(in srgb, ${displayColor} 9%, transparent)`,
+          }}
         >
           <span
             data-tier-label
             className="wrap-break-word text-center text-sm font-extrabold leading-snug"
             style={{
               color: displayColor,
-              textShadow: `0 0 12px ${displayGlow}cc`,
+              textShadow: `0 0 12px color-mix(in srgb, ${displayGlow} 80%, transparent)`,
             }}
           >
             {displayLabel}
@@ -187,7 +190,7 @@ export default function TierCard({ tier, index, total }) {
             disabled={index === 0}
             title="Monter"
           >
-            ↑
+            <MoveUp />
           </Button>
           <Button
             variant="ghost"
@@ -198,7 +201,7 @@ export default function TierCard({ tier, index, total }) {
               color: isEditing ? displayColor : "var(--muted-foreground)",
             }}
           >
-            ⚙
+            <Settings />
           </Button>
           <Button
             variant="ghost"
@@ -207,7 +210,7 @@ export default function TierCard({ tier, index, total }) {
             disabled={index === total - 1}
             title="Descendre"
           >
-            ↓
+            <MoveDown />
           </Button>
         </div>
       </div>
