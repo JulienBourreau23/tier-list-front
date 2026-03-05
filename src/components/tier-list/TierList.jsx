@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { showErrorToast, showSuccessToast } from "@/lib/show-toast";
 import { TABS } from "@/lib/tier-list/constants";
 import { useTierListStore } from "@/lib/tier-list/store";
 import MonsterPool from "./MonsterPool";
@@ -157,8 +158,10 @@ export default function TierList() {
       link.click();
       document.body.removeChild(link);
       setExportStatus("success");
+      showSuccessToast(exportStatus);
     } catch (_err) {
       setExportStatus("error");
+      showErrorToast(exportStatus);
     } finally {
       setExporting(false);
       setTimeout(() => setExportStatus(null), 3000);
@@ -182,20 +185,6 @@ export default function TierList() {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-background px-6 py-4 pb-12 text-foreground">
-      {/* Toast export */}
-      {exportStatus && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold shadow-lg transition-all ${
-            exportStatus === "success"
-              ? "border-green-500 bg-green-500/10 text-green-500"
-              : "border-destructive bg-destructive/10 text-destructive"
-          }`}
-        >
-          {exportStatus === "success"
-            ? "✅ Export réussi !"
-            : "❌ Export échoué"}
-        </div>
-      )}
       {/* Titre + actions globales */}
       <div className="mb-6 flex w-full max-w-[90%] justify-end">
         <div className="flex items-center gap-2">

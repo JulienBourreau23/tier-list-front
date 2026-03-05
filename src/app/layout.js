@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import Footer from "@/components/layout/footer";
 import Header from "@/components/layout/header";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
           <QueryProvider>
             <Header />
             {children}
+            <Toaster />
             <Footer />
           </QueryProvider>
         </ThemeProvider>
