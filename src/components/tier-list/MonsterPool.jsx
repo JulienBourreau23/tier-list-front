@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { useTierListStore } from "@/lib/tier-list/store";
 import { useMonsters } from "@/lib/tier-list/useMonsters";
 import { cn } from "@/lib/utils";
@@ -118,18 +119,12 @@ function MonsterIcon({ monster }) {
  * déjà placés sont exclus grâce à `placedIds` dérivé de `useTierListStore`.
  *
  * @returns {JSX.Element}
- *
- * @example
- * // Utilisation dans un layout de tier list
- * <TierListProvider>
- *   <TierBoard />
- *   <MonsterPool />
- * </TierListProvider>
  */
 
 export default function MonsterPool() {
   const activeTab = useTierListStore((state) => state.activeTab);
   const placedMonsters = useTierListStore((state) => state.placedMonsters);
+  const removeMonster = useTierListStore((state) => state.removeMonster);
   const placedIds = useMemo(
     () =>
       new Set(
@@ -171,9 +166,36 @@ export default function MonsterPool() {
   const handleElementToggle = (id) => {
     setActiveElement((prev) => (prev === id ? null : id));
   };
-
+  /**
+   * Autorise le drop sur la zone du pool.
+   * @param {DragEvent} e
+   * @returns {void}
+   */
+  const handleDragOver = (e) => e.preventDefault();
+  /**
+   * Retire le monstre déposé de son tier et le remet dans le pool.
+   * @param {DragEvent} e
+   * @returns {void}
+   */
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const json = e.dataTransfer.getData("monsterJson");
+    if (json) {
+      try {
+        const monsterObj = JSON.parse(json);
+        removeMonster(monsterObj.com2us_id);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+  };
   return (
-    <div className="mt-6 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+    <section
+      aria-label="Zone de dépôt - pool de monstres"
+      className="mt-6 w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       {/* En-tête */}
       <div className="flex items-center justify-between border-b border-border bg-secondary px-4 py-3">
         <span className="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -195,13 +217,13 @@ export default function MonsterPool() {
           <label htmlFor="search-monster" className="sr-only">
             Rechercher un monstre
           </label>
-          <input
+          <Input
             id="search-monster"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Rechercher un monstre..."
-            className="w-full rounded-lg border border-input bg-background py-1.5 pl-8 pr-3 text-xs font-medium text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-1 focus:ring-(--ring)/30"
+            className="pl-8 pr-3 text-xs font-medium"
           />
           {search && (
             <button
@@ -275,6 +297,6 @@ export default function MonsterPool() {
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { TABS } from "@/lib/tier-list/constants";
 import { useTierListStore } from "@/lib/tier-list/store";
 import MonsterPool from "./MonsterPool";
@@ -196,59 +197,55 @@ export default function TierList() {
         </div>
       )}
       {/* Titre + actions globales */}
-      <div className="mb-6 flex w-full max-w-[90%] items-center justify-between">
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          🏆 Tier List
-        </h1>
+      <div className="mb-6 flex w-full max-w-[90%] justify-end">
         <div className="flex items-center gap-2">
           {/* Screenshot */}
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleScreenshot}
             disabled={exporting}
             title="Exporter en PNG"
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold text-muted-foreground transition hover:border-primary hover:text-foreground disabled:opacity-50"
+            className="border border-border hover:border-primary hover:text-white hover:bg-primary/10"
           >
             {exporting ? "⏳" : "📷"} {exporting ? "Export..." : "Exporter PNG"}
-          </button>
+          </Button>
 
           {/* Reset */}
-          <button
-            type="button"
+          <Button
+            variant={confirmReset ? "destructive" : "outline"}
+            size="sm"
             onClick={handleReset}
             title="Remettre à zéro"
-            className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
+            className={
               confirmReset
-                ? "border-destructive bg-(--destructive)/10 text-destructive"
-                : "border-border bg-card text-muted-foreground hover:border-destructive hover:text-destructive"
-            }`}
+                ? "border border-destructive bg-destructive/10 text-white hover:bg-destructive/20 hover:text-white"
+                : "border border-border hover:border-destructive hover:text-white hover:bg-transparent"
+            }
           >
             🗑 {confirmReset ? "Confirmer ?" : "Reset"}
-          </button>
+          </Button>
         </div>
       </div>
-
-      {/* Onglets */}
       <div className="mb-5 w-full max-w-[90%]">
         <TierTabs />
       </div>
-
-      {/* Sous-header */}
+      ;
       <div className="mb-4 flex w-full max-w-[90%] items-center justify-between">
         <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
           {TABS.find((t) => t.id === activeTab)?.label}
         </span>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-bold tracking-wide text-muted-foreground transition hover:border-primary hover:text-foreground hover:shadow-sm"
-          onClick={addTier}
-        >
-          <span className="text-base leading-none">＋</span>
-          Ajouter un tier
-        </button>
-      </div>
 
-      {/* Zone capturée pour le screenshot */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addTier}
+          className="border border-border hover:border-primary hover:text-white hover:bg-primary/10"
+        >
+          ＋ Ajouter un tier
+        </Button>
+      </div>
+      ;
       <div
         ref={tierZoneRef}
         data-capture
@@ -263,11 +260,11 @@ export default function TierList() {
           />
         ))}
       </div>
-
-      {/* Pool de monstres — hors screenshot, remonte les filtres au changement d'onglet */}
+      ;
       <div className="w-full max-w-[90%]">
         <MonsterPool key={activeTab} />
       </div>
+      ;
     </div>
   );
 }

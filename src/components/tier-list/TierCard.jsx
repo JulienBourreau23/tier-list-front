@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import { useTierListStore } from "@/lib/tier-list/store";
 import TierEditPanel from "./TierEditPanel";
 
@@ -90,7 +91,12 @@ export default function TierCard({ tier, index, total }) {
   const placeMonster = useTierListStore((state) => state.placeMonster);
   const monsters = placedMonsters[tier.id] ?? [];
   const isEditing = editingId === tier.id;
+  const editColor = useTierListStore((state) => state.editColor);
+  const editLabel = useTierListStore((state) => state.editLabel);
 
+  const displayColor = isEditing ? editColor.color : tier.color;
+  const displayGlow = isEditing ? editColor.glow : tier.glow;
+  const displayLabel = isEditing ? editLabel : tier.label;
   /**
    * Permet de drag and drop sans recharger la page
    * @param {DragEvent} e - Empêche le fonctionnement par défaut
@@ -132,22 +138,25 @@ export default function TierCard({ tier, index, total }) {
       data-tier-color={tier.color}
       className="w-full overflow-hidden rounded-2xl bg-card transition-transform duration-150 hover:-translate-y-px"
       style={{
-        border: `1px solid ${tier.color}55`,
-        boxShadow: `0 0 20px ${tier.glow}25, 0 0 6px ${tier.color}30`,
+        border: `1px solid ${displayColor}55`,
+        boxShadow: `0 0 20px ${displayGlow}25, 0 0 6px ${displayColor}30`,
       }}
     >
       <div className="flex items-stretch">
         {/* Label */}
         <div
           className="flex w-35 shrink-0 items-center justify-center border-r border-border p-3"
-          style={{ background: `${tier.color}18` }}
+          style={{ background: `${displayColor}18` }}
         >
           <span
             data-tier-label
             className="wrap-break-word text-center text-sm font-extrabold leading-snug"
-            style={{ color: tier.color, textShadow: `0 0 12px ${tier.glow}cc` }}
+            style={{
+              color: displayColor,
+              textShadow: `0 0 12px ${displayGlow}cc`,
+            }}
           >
-            {tier.label}
+            {displayLabel}
           </span>
         </div>
 
@@ -171,38 +180,37 @@ export default function TierCard({ tier, index, total }) {
 
         {/* Contrôles */}
         <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border p-2">
-          <button
-            type="button"
-            className="rounded px-1.5 py-1 text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground disabled:opacity-20"
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => moveUp(index)}
             disabled={index === 0}
             title="Monter"
           >
             ↑
-          </button>
-          <button
-            type="button"
-            className="rounded px-1.5 py-1 text-sm transition hover:bg-accent"
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={handleToggleEdit}
             title="Paramètres"
             style={{
-              color: isEditing ? tier.color : "var(--muted-foreground)",
+              color: isEditing ? displayColor : "var(--muted-foreground)",
             }}
           >
             ⚙
-          </button>
-          <button
-            type="button"
-            className="rounded px-1.5 py-1 text-sm text-muted-foreground transition hover:bg-accent hover:text-foreground disabled:opacity-20"
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-xs"
             onClick={() => moveDown(index)}
             disabled={index === total - 1}
             title="Descendre"
           >
             ↓
-          </button>
+          </Button>
         </div>
       </div>
-
       {isEditing && <TierEditPanel tier={tier} />}
     </div>
   );

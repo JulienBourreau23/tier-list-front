@@ -1,8 +1,25 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useTierListStore } from "@/lib/tier-list/store";
 import ColorPicker from "./ColorPicker";
 
+/**
+ * Détermine si une couleur hex est claire ou sombre.
+ * Retourne true si la couleur est claire (texte noir recommandé).
+ * @param {string} hex - Couleur en format hex (ex: "#ef4444")
+ * @returns {boolean}
+ */
+function isLightColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  // Formule de luminosité perçue
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6;
+}
 /**
  * Panneau d'édition d'un tier (label + couleur + actions).
  * Permet de modifier le titre, la couleur, de sauvegarder ou de supprimer le tier.
@@ -20,17 +37,17 @@ export default function TierEditPanel({ tier }) {
   const deleteTier = useTierListStore((state) => state.deleteTier);
 
   return (
-    <div className="flex flex-col gap-4 border-t border-border bg-secondary p-4">
+    <Card className="flex flex-col gap-4 border-t border-border bg-secondary p-4 rounded-none rounded-b-2xl shadow-none">
       {/* Titre */}
       <div className="mb-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
         Titre du tier
       </div>
-      <input
-        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition focus:border-ring focus:ring-2 focus:ring-(--ring)/25"
+      <Input
         value={editLabel}
         onChange={(e) => setEditLabel(e.target.value)}
         maxLength={30}
         placeholder="Ex: God Tier, À éviter absolument..."
+        className="font-semibold  bg-background border-border text-foreground placeholder:text-muted-foreground focus:border-primary"
       />
       {/* Couleur */}
       <ColorPicker />
@@ -54,29 +71,34 @@ export default function TierEditPanel({ tier }) {
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          className="mr-auto rounded-lg px-4 py-2 text-sm font-bold text-destructive transition hover:bg-(--destructive)/20"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => deleteTier(tier.id)}
+          className="mr-auto border border-destructive/50 text-destructive hover:border-destructive hover:bg-destructive/10 hover:text-white"
         >
           🗑 Supprimer
-        </button>
-        <button
-          type="button"
-          className="rounded-lg bg-accent px-4 py-2 text-sm font-bold text-accent-foreground transition hover:opacity-80"
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={closeEdit}
+          className="border border-border/80 text-foreground hover:border-primary hover:text-white hover:bg-primary/10"
         >
           Annuler
-        </button>
-        <button
-          type="button"
-          className="rounded-lg px-4 py-2 text-sm font-extrabold text-black transition hover:opacity-85"
-          style={{ background: editColor.color }}
+        </Button>
+        <Button
+          size="sm"
           onClick={saveEdit}
+          className="font-extrabold border-0 hover:opacity-85"
+          style={{
+            background: editColor.color,
+            color: isLightColor(editColor.color) ? "#000000" : "#ffffff",
+          }}
         >
           Sauvegarder
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }
