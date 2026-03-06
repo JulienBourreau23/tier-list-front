@@ -47,11 +47,16 @@ export default function TierList() {
       const PADDING = 10;
       const TITLE_H = 48;
 
-      // Collecte les données de chaque tier
       const rows = Array.from(tierCards).map((card) => {
         const label =
           card.querySelector("[data-tier-label]")?.textContent || "";
-        const color = card.dataset.tierColor || "#888";
+
+        // Résoudre la couleur CSS via getComputedStyle sur le label
+        const labelEl = card.querySelector("[data-tier-label]");
+        const color = labelEl
+          ? getComputedStyle(labelEl).color // couleur résolue en rgb(...)
+          : "#888";
+
         const icons = Array.from(
           card.querySelectorAll("[data-monster-icon]"),
         ).map((img) => img.src);
