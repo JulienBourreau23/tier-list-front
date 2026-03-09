@@ -12,7 +12,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-6 text-foreground">
       {/* SVG */}
-      <NotFoundLogo />
+      {/*<NotFoundLogo />*/}
 
       {/* Code erreur */}
       <div className="flex flex-col items-center gap-3 text-center">
