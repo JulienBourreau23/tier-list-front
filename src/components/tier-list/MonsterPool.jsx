@@ -59,6 +59,22 @@ const ELEMENTS_BY_TAB = {
     { id: "Light", label: "Lumière", emoji: "✨" },
     { id: "Dark", label: "Ténèbre", emoji: "🌑" },
   ],
+  all: [
+    { id: "Fire", label: "Feu", emoji: "🔥" },
+    { id: "Water", label: "Eau", emoji: "💧" },
+    { id: "Wind", label: "Vent", emoji: "💨" },
+    { id: "Light", label: "Lumière", emoji: "✨" },
+    { id: "Dark", label: "Ténèbre", emoji: "🌑" },
+  ],
+};
+
+const STARS_BY_TAB = {
+  all: [
+    { id: 2, label: "2⭐" },
+    { id: 3, label: "3⭐" },
+    { id: 4, label: "4⭐" },
+    { id: 5, label: "5⭐" },
+  ],
 };
 
 /**
@@ -150,9 +166,13 @@ export default function MonsterPool() {
   const { data, isLoading, isError } = useMonsters(activeTab);
   const [search, setSearch] = useState("");
   const [activeElement, setActiveElement] = useState(null);
+  const [activeStars, setActiveStars] = useState(
+    activeTab === "all" ? 5 : null,
+  );
 
   // Remet le filtre élément à zéro quand on change d'onglet
   const elements = ELEMENTS_BY_TAB[activeTab] ?? [];
+  const stars = STARS_BY_TAB[activeTab] ?? [];
 
   /**
    * Liste filtrée des monstres :
@@ -174,8 +194,11 @@ export default function MonsterPool() {
       const q = search.trim().toLowerCase();
       list = list.filter((m) => m.nom_en.toLowerCase().includes(q));
     }
+    if (activeStars) {
+      list = list.filter((m) => m.natural_stars === activeStars);
+    }
     return list;
-  }, [data, placedIds, activeElement, search]);
+  }, [data, placedIds, activeElement, search, activeStars]);
 
   const handleElementToggle = (id) => {
     setActiveElement((prev) => (prev === id ? null : id));
@@ -214,11 +237,11 @@ export default function MonsterPool() {
       onDrop={handleDrop}
     >
       {/* En-tête */}
-      <div className="flex items-center justify-between border-b border-border bg-secondary px-4 py-3">
+      <div className="grid grid-cols-3 items-center border-b border-border bg-secondary px-4 py-3">
         <span className="flex items-center gap-2 text-sm font-bold text-foreground">
           👾 Monstres disponibles
         </span>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center gap-4">
           {/* Toggle noms */}
           <button
             type="button"
@@ -252,6 +275,34 @@ export default function MonsterPool() {
               : `${monsters.length} monstre${monsters.length !== 1 ? "s" : ""} · Glisser vers un tier`}
           </span>
         </div>
+        {/* Filtres par étoiles — uniquement onglet "all" */}
+        {stars.length > 0 && (
+          <div className="flex items-center justify-end gap-1">
+            {stars.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() =>
+                  setActiveStars((prev) => (prev === s.id ? null : s.id))
+                }
+                aria-pressed={activeStars === s.id}
+                className={cn(
+                  "rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all duration-150",
+                  {
+                    "border-primary bg-(--primary)/20 text-foreground":
+                      activeStars === s.id,
+                  },
+                  {
+                    "border-border bg-transparent text-muted-foreground hover:border-(--primary)/50 hover:text-foreground":
+                      activeStars !== s.id,
+                  },
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Barre de recherche + filtres élément */}

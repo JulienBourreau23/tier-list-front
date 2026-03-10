@@ -91,8 +91,8 @@ function MonsterChip({ monster, tierId, index, showName }) {
         if (fromIndex < toIndex) toIndex -= 1;
         reorderMonster(monsterObj.com2us_id, tierId, toIndex);
       } else {
-        // Tier différent → place le monstre à la fin (comportement existant)
-        placeMonster(monsterObj, tierId);
+        // Tier différent → place le monstre à la position cible
+        placeMonster(monsterObj, tierId, toIndex);
       }
     } catch (_) {
       /* ignore */
@@ -198,10 +198,15 @@ export default function TierCard({ tier, index, total }) {
     e.preventDefault();
     // Essaie de récupérer l'objet complet
     const json = e.dataTransfer.getData("monsterJson");
+    const chips = Array.from(e.currentTarget.querySelectorAll("li"));
+    const index = chips.findIndex((chip) => {
+      const rect = chip.getBoundingClientRect();
+      return e.clientX < rect.left + rect.width / 2;
+    });
     if (json) {
       try {
         const monsterObj = JSON.parse(json);
-        placeMonster(monsterObj, tier.id);
+        placeMonster(monsterObj, tier.id, index === -1 ? null : index);
       } catch (_) {
         /* ignore */
       }

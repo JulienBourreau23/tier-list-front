@@ -108,6 +108,12 @@ export const TABS = [
     icon: "🔥💨💧🌑✨",
     apiUrl: "monsters?awaken_level=2",
   },
+  {
+    id: "all",
+    label: "Tous les monstres",
+    icon: "🔥💨💧🌑✨",
+    apiUrl: "monsters?limit=1100",
+  },
 ];
 
 export const DEFAULT_TIERS = [

@@ -275,7 +275,7 @@ export const useTierListStore = create(
        * @param {number|string} tierId - L'id du tier cible
        * @returns {void}
        */
-      placeMonster: (monsterObj, tierId) => {
+      placeMonster: (monsterObj, tierId, index = null) => {
         const id = String(monsterObj.com2us_id);
         set((state) => {
           const cleaned = Object.fromEntries(
@@ -284,10 +284,12 @@ export const useTierListStore = create(
               list.filter((m) => String(m.com2us_id) !== id),
             ]),
           );
+          const list = [...(cleaned[tierId] ?? [])];
+          list.splice(index ?? list.length, 0, monsterObj);
           return {
             placedMonsters: {
               ...cleaned,
-              [tierId]: [...(cleaned[tierId] ?? []), monsterObj],
+              [tierId]: list,
             },
           };
         });
@@ -358,6 +360,14 @@ export const useTierListStore = create(
     }),
     {
       name: "tier-list-storage",
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...persistedState,
+        tiersByTab: {
+          ...currentState.tiersByTab,
+          ...persistedState.tiersByTab,
+        },
+      }),
     },
   ),
 );
