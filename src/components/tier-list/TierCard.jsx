@@ -2,6 +2,7 @@
 
 import { MoveDown, MoveUp, Settings } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTierListStore } from "@/lib/tier-list/store";
 import TierEditPanel from "./TierEditPanel";
@@ -17,58 +18,139 @@ function getIconUrl(com2us_id) {
 
 /**
  * Icône draggable d'un monstre placé dans un tier.
- * Peut être glissée vers un autre tier via drag-and-drop.
- * Un clic retire le monstre de son tier via `removeMonster` du store.
- * @param {Object} props
- * @param {import('@/lib/tier-list/store').Monster} props.monster - Le monstre à afficher
- * @param {number} props.tierId - Id du tier contenant le monstre
+ * Supporte le réordonnancement par drag-and-drop à l'intérieur du même tier,
+ * ainsi que le déplacement vers un autre tier.
+ * Un clic retire le monstre de son tier.
+ *
+ * @param {Object}  props
+ * @param {import('@/lib/tier-list/store').Monster} props.monster   - Le monstre à afficher
+ * @param {number|string}  props.tierId    - Id du tier contenant le monstre
+ * @param {number}  props.index     - Index du monstre dans le tier
+ * @param {boolean} props.showName  - Afficher ou non le nom du monstre
  * @returns {React.JSX.Element}
  */
-// Reçoit l'objet monstre complet — pas besoin de chercher dans le cache
-function MonsterChip({ monster, tierId }) {
+function MonsterChip({ monster, tierId, index, showName }) {
   const removeMonster = useTierListStore((state) => state.removeMonster);
+  const reorderMonster = useTierListStore((state) => state.reorderMonster);
+  const placeMonster = useTierListStore((state) => state.placeMonster);
+  const [dropSide, setDropSide] = useState(null); // "left" | "right" | null
 
-  /**
-   * Permet le départ du monstre depuis sa position
-   * @param {DragEvent} e - Stock les information du monstre lors de l'evenement
-   * @returns {void}
-   */
+  /** Démarre le drag : transmet le monstre + le tier source */
   const handleDragStart = (e) => {
     e.dataTransfer.setData("monsterJson", JSON.stringify(monster));
-    e.dataTransfer.setData("fromTierId", tierId);
+    e.dataTransfer.setData("fromTierId", String(tierId));
+    e.dataTransfer.setData("fromIndex", String(index));
+    e.dataTransfer.effectAllowed = "move";
   };
 
   /**
-   * Permet de retirer le monstre de sa position
+   * Pendant le survol : détermine si le curseur est à gauche ou à droite
+   * du centre du chip pour afficher le bon indicateur de position.
+   * @param {DragEvent} e - Survol
    * @returns {void}
    */
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mid = rect.left + rect.width / 2;
+    setDropSide(e.clientX < mid ? "left" : "right");
+  };
+
+  /**
+   * Réinitialise l'indicateur visuel de position quand le curseur quitte le chip.
+   * @returns {void}
+   */
+  const handleDragLeave = () => setDropSide(null);
+
+  /**
+   * Drop sur ce chip : réordonne dans le même tier ou déplace depuis un autre.
+   * @param {DragEvent} e - L'événement de drop natif
+   * @returns {void}
+   */
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropSide(null);
+
+    const json = e.dataTransfer.getData("monsterJson");
+    if (!json) return;
+    try {
+      const monsterObj = JSON.parse(json);
+      const fromTierId = e.dataTransfer.getData("fromTierId");
+      const fromIndex = parseInt(e.dataTransfer.getData("fromIndex"), 10);
+
+      // Calcule la position cible (avant ou après ce chip)
+      const rect = e.currentTarget.getBoundingClientRect();
+      const insertAfter = e.clientX >= rect.left + rect.width / 2;
+      let toIndex = insertAfter ? index + 1 : index;
+
+      if (fromTierId === String(tierId)) {
+        // Même tier → réordonnancement
+        // Ajustement de l'index si on déplace vers la droite
+        if (fromIndex < toIndex) toIndex -= 1;
+        reorderMonster(monsterObj.com2us_id, tierId, toIndex);
+      } else {
+        // Tier différent → place le monstre à la fin (comportement existant)
+        placeMonster(monsterObj, tierId);
+      }
+    } catch (_) {
+      /* ignore */
+    }
+  };
+
   const handleRemove = () => removeMonster(monster.com2us_id);
+  const iconSize = showName ? 40 : 52;
 
   return (
-    <button
-      type="button"
-      draggable
-      onDragStart={handleDragStart}
-      onClick={handleRemove}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") handleRemove();
-      }}
-      title={`${monster.nom_en} — clic pour retirer`}
-      className="flex min-w-14 max-w-20 shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-border bg-accent px-1.5 py-1.5 font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
+    <li
+      className="relative flex shrink-0"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
-      <Image
-        data-monster-icon
-        src={getIconUrl(monster.com2us_id)}
-        alt={monster.nom_en}
-        width={40}
-        height={40}
-        className="rounded-lg shrink-0"
-        unoptimized
-      />
-      <span className="w-full text-center text-[9px] font-bold text-muted-foreground leading-tight line-clamp-2 wrap-break-word">
-        {monster.nom_en}
-      </span>
-    </button>
+      {/* Indicateur d'insertion à gauche */}
+      {dropSide === "left" && (
+        <span className="pointer-events-none absolute -left-1.5 top-0 bottom-0 w-1 rounded-full bg-primary z-10" />
+      )}
+
+      <button
+        type="button"
+        draggable
+        onDragStart={handleDragStart}
+        onClick={handleRemove}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleRemove();
+        }}
+        title={`${monster.nom_en} — clic pour retirer`}
+        className="flex shrink-0 cursor-grab flex-col items-center gap-1 rounded-xl border border-border bg-accent font-[inherit] transition-transform duration-150 hover:scale-110 select-none"
+        style={{
+          padding: showName ? "6px" : "4px",
+          minWidth: showName ? "56px" : "60px",
+          maxWidth: showName ? "80px" : "68px",
+        }}
+      >
+        <Image
+          data-monster-icon
+          src={getIconUrl(monster.com2us_id)}
+          alt={monster.nom_en}
+          width={iconSize}
+          height={iconSize}
+          className="rounded-lg shrink-0"
+          unoptimized
+        />
+        {showName && (
+          <span className="w-full text-center text-[9px] font-bold text-muted-foreground leading-tight line-clamp-2 wrap-break-word">
+            {monster.nom_en}
+          </span>
+        )}
+      </button>
+
+      {/* Indicateur d'insertion à droite */}
+      {dropSide === "right" && (
+        <span className="pointer-events-none absolute -right-1.5 top-0 bottom-0 w-1 rounded-full bg-primary z-10" />
+      )}
+    </li>
   );
 }
 
@@ -90,6 +172,7 @@ export default function TierCard({ tier, index, total }) {
   const moveDown = useTierListStore((state) => state.moveDown);
   const placedMonsters = useTierListStore((state) => state.placedMonsters);
   const placeMonster = useTierListStore((state) => state.placeMonster);
+  const showMonsterNames = useTierListStore((state) => state.showMonsterNames);
   const monsters = placedMonsters[tier.id] ?? [];
   const isEditing = editingId === tier.id;
   const editColor = useTierListStore((state) => state.editColor);
@@ -98,6 +181,7 @@ export default function TierCard({ tier, index, total }) {
   const displayColor = isEditing ? editColor.color : tier.color;
   const displayGlow = isEditing ? editColor.glow : tier.glow;
   const displayLabel = isEditing ? editLabel : tier.label;
+
   /**
    * Permet de drag and drop sans recharger la page
    * @param {DragEvent} e - Empêche le fonctionnement par défaut
@@ -171,49 +255,57 @@ export default function TierCard({ tier, index, total }) {
           onDrop={handleDrop}
         >
           {monsters.length === 0 ? (
-            <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground opacity-40">
-              Déposer ici
+            <span className="text-xs text-muted-foreground/40 select-none">
+              Glisser un monstre ici…
             </span>
           ) : (
-            monsters.map((m) => (
-              <MonsterChip key={m.com2us_id} monster={m} tierId={tier.id} />
+            monsters.map((m, i) => (
+              <MonsterChip
+                key={m.com2us_id}
+                monster={m}
+                tierId={tier.id}
+                index={i}
+                showName={showMonsterNames}
+              />
             ))
           )}
         </section>
 
-        {/* Contrôles */}
-        <div className="flex shrink-0 flex-col items-center justify-center gap-0.5 border-l border-border p-2">
+        {/* Actions */}
+        <div className="flex shrink-0 flex-col items-center justify-center gap-1 border-l border-border px-2 py-2">
           <Button
             variant="ghost"
-            size="icon-xs"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20"
             onClick={() => moveUp(index)}
             disabled={index === 0}
             title="Monter"
           >
-            <MoveUp />
+            <MoveUp className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
-            size="icon-xs"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
             onClick={handleToggleEdit}
-            title="Paramètres"
-            style={{
-              color: isEditing ? displayColor : "var(--muted-foreground)",
-            }}
+            title="Modifier"
           >
-            <Settings />
+            <Settings className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
-            size="icon-xs"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20"
             onClick={() => moveDown(index)}
             disabled={index === total - 1}
             title="Descendre"
           >
-            <MoveDown />
+            <MoveDown className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      {/* Panneau d'édition */}
       {isEditing && <TierEditPanel tier={tier} />}
     </div>
   );

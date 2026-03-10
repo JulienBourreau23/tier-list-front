@@ -30,12 +30,13 @@ import { getNextId, makeTiers } from "@/lib/tier-list/utils";
 
 /**
  * @typedef {Object} TierListState
- * @property {string}                          activeTab      - Id de l'onglet actif (ex: "nat4-fwe")
- * @property {Record<string, Tier[]>}          tiersByTab     - Tiers indexés par id d'onglet
- * @property {Record<string|number, Monster[]>} placedMonsters - Monstres placés, indexés par tierId
- * @property {number|null}                     editingId      - Id du tier en cours d'édition, null si aucun
- * @property {string}                          editLabel      - Label temporaire du tier en cours d'édition
- * @property {PaletteEntry}                    editColor      - Couleur temporaire du tier en cours d'édition
+ * @property {string}                          activeTab        - Id de l'onglet actif (ex: "nat4-fwe")
+ * @property {Record<string, Tier[]>}          tiersByTab       - Tiers indexés par id d'onglet
+ * @property {Record<string|number, Monster[]>} placedMonsters  - Monstres placés, indexés par tierId
+ * @property {number|null}                     editingId        - Id du tier en cours d'édition, null si aucun
+ * @property {string}                          editLabel        - Label temporaire du tier en cours d'édition
+ * @property {PaletteEntry}                    editColor        - Couleur temporaire du tier en cours d'édition
+ * @property {boolean}                         showMonsterNames - Afficher ou masquer les noms des monstres
  */
 
 /**
@@ -84,6 +85,9 @@ export const useTierListStore = create(
 
       /** @type {PaletteEntry} Couleur temporaire pendant l'édition */
       editColor: PALETTE[0],
+
+      /** @type {boolean} Afficher ou masquer les noms des monstres */
+      showMonsterNames: true,
 
       // ── Getter ─────────────────────────────────────────────────────
 
@@ -211,28 +215,54 @@ export const useTierListStore = create(
       setEditColor: (color) => set({ editColor: color }),
 
       /**
-       * Sauvegarde les modifications du tier en cours d'édition
-       * et ferme le panneau.
+       * Sauvegarde les modifications du tier en cours d'édition et ferme le panneau.
+       * Propage également le label et la couleur modifiés à la même position (index)
+       * dans tous les autres onglets, pour une navigation cohérente entre onglets.
        * @returns {void}
        */
       saveEdit: () => {
-        const { editingId, editLabel, editColor, activeTab } = get();
-        set((state) => ({
-          tiersByTab: {
-            ...state.tiersByTab,
-            [activeTab]: state.tiersByTab[activeTab].map((t) =>
-              t.id === editingId
-                ? {
-                    ...t,
-                    label: editLabel,
-                    color: editColor.color,
-                    glow: editColor.glow,
-                  }
-                : t,
-            ),
-          },
-          editingId: null,
-        }));
+        const { editingId, editLabel, editColor, activeTab, tiersByTab } =
+          get();
+
+        // Trouve l'index du tier modifié dans l'onglet actif
+        const activeTiers = tiersByTab[activeTab] ?? [];
+        const editedIndex = activeTiers.findIndex((t) => t.id === editingId);
+
+        set((state) => {
+          const newTiersByTab = {};
+
+          for (const [tabId, tiers] of Object.entries(state.tiersByTab)) {
+            if (tabId === activeTab) {
+              // Onglet actif : met à jour par id
+              newTiersByTab[tabId] = tiers.map((t) =>
+                t.id === editingId
+                  ? {
+                      ...t,
+                      label: editLabel,
+                      color: editColor.color,
+                      glow: editColor.glow,
+                    }
+                  : t,
+              );
+            } else if (editedIndex >= 0 && editedIndex < tiers.length) {
+              // Autres onglets : propage label + couleur à la même position
+              newTiersByTab[tabId] = tiers.map((t, i) =>
+                i === editedIndex
+                  ? {
+                      ...t,
+                      label: editLabel,
+                      color: editColor.color,
+                      glow: editColor.glow,
+                    }
+                  : t,
+              );
+            } else {
+              newTiersByTab[tabId] = tiers;
+            }
+          }
+
+          return { tiersByTab: newTiersByTab, editingId: null };
+        });
       },
 
       // ── Actions monstres ───────────────────────────────────────────
@@ -264,25 +294,58 @@ export const useTierListStore = create(
       },
 
       /**
-       * Retire un monstre de tous les tiers.
-       * @param {number|string} monsterId - Le com2us_id du monstre à retirer
+       * Réordonne un monstre à l'intérieur d'un tier.
+       * Déplace le monstre dont l'id est `com2us_id` à la position `toIndex`
+       * dans la liste du tier `tierId`.
+       * @param {number|string} com2us_id - L'id du monstre à déplacer
+       * @param {number|string} tierId    - L'id du tier concerné
+       * @param {number}        toIndex   - La position cible (index d'insertion)
        * @returns {void}
        */
-      removeMonster: (monsterId) => {
+      reorderMonster: (com2us_id, tierId, toIndex) => {
+        const id = String(com2us_id);
+        set((state) => {
+          const list = [...(state.placedMonsters[tierId] ?? [])];
+          const fromIndex = list.findIndex((m) => String(m.com2us_id) === id);
+          if (fromIndex === -1 || fromIndex === toIndex) return {};
+          const [item] = list.splice(fromIndex, 1);
+          list.splice(toIndex, 0, item);
+          return {
+            placedMonsters: { ...state.placedMonsters, [tierId]: list },
+          };
+        });
+      },
+
+      /**
+       * Retire un monstre de tous les tiers.
+       * @param {number|string} com2us_id - L'id du monstre à retirer
+       * @returns {void}
+       */
+      removeMonster: (com2us_id) => {
+        const id = String(com2us_id);
         set((state) => ({
           placedMonsters: Object.fromEntries(
             Object.entries(state.placedMonsters).map(([tid, list]) => [
               tid,
-              list.filter((m) => String(m.com2us_id) !== String(monsterId)),
+              list.filter((m) => String(m.com2us_id) !== id),
             ]),
           ),
         }));
       },
 
+      // ── Actions UI ─────────────────────────────────────────────────
+
       /**
-       * Remet la tier list à zéro : réinitialise tous les tiers à leur état
-       * par défaut et vide tous les monstres placés.
-       * La persistance localStorage est également effacée via le middleware persist.
+       * Bascule l'affichage des noms des monstres (dans les tiers et le pool).
+       * @returns {void}
+       */
+      toggleMonsterNames: () =>
+        set((state) => ({ showMonsterNames: !state.showMonsterNames })),
+
+      // ── Reset ──────────────────────────────────────────────────────
+
+      /**
+       * Remet la tier list à zéro : tiers par défaut, aucun monstre placé.
        * @returns {void}
        */
       resetAll: () =>
@@ -290,12 +353,11 @@ export const useTierListStore = create(
           tiersByTab: initTiersByTab(),
           placedMonsters: {},
           editingId: null,
+          showMonsterNames: true,
         }),
     }),
-
-    // ── Config persist ─────────────────────────────────────────────
     {
-      name: "tierlist-state-v1", // même clé qu'avant → les données sauvegardées sont conservées
+      name: "tier-list-storage",
     },
   ),
 );

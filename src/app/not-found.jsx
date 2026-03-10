@@ -1,6 +1,7 @@
 // src/app/not-found.jsx
 
 import Link from "next/link";
+// biome-ignore lint/correctness/noUnusedImports: logo en cours de remplacement
 import NotFoundLogo from "@/components/layout/not-found-logo";
 
 /**

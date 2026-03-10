@@ -1,7 +1,7 @@
 "use client";
 
 import { Camera, Hourglass, Plus, Trash2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { showErrorToast, showSuccessToast } from "@/lib/show-toast";
 import { TABS } from "@/lib/tier-list/constants";
@@ -9,6 +9,11 @@ import { useTierListStore } from "@/lib/tier-list/store";
 import MonsterPool from "./MonsterPool";
 import TierCard from "./TierCard";
 import TierTabs from "./TierTabs";
+
+/** Zone de déclenchement de l'auto-scroll (px depuis le bord de la fenêtre) */
+const SCROLL_ZONE = 120;
+/** Vitesse maximale de l'auto-scroll (px/frame) */
+const SCROLL_SPEED = 14;
 
 /**
  * Composant principal qui appel aux fonctions des composants enfants pour générer la tierlist
@@ -26,6 +31,81 @@ export default function TierList() {
   const [exporting, setExporting] = useState(false);
   const [_exportStatus, setExportStatus] = useState(null);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  // ── Auto-scroll pendant le drag ──────────────────────────────────
+  useEffect(() => {
+    let rafId = null;
+    let lastY = 0;
+
+    /**
+     * Calcule la vitesse de scroll en fonction de la proximité du bord.
+     * @param {number} y - Position Y du curseur
+     * @returns {number} Vitesse (positive = vers le bas, négative = vers le haut, 0 = arrêt)
+     */
+    const getScrollVelocity = (y) => {
+      const distTop = y;
+      const distBottom = window.innerHeight - y;
+      if (distTop < SCROLL_ZONE) {
+        return -SCROLL_SPEED * (1 - distTop / SCROLL_ZONE);
+      }
+      if (distBottom < SCROLL_ZONE) {
+        return SCROLL_SPEED * (1 - distBottom / SCROLL_ZONE);
+      }
+      return 0;
+    };
+
+    /**
+     * Mémorise la position Y du curseur/
+     * @param {DragEvent} e - Au survol
+     * @returns {void}
+     */
+    const onDragOver = (e) => {
+      lastY = e.clientY;
+    };
+
+    /**
+     * Boucle qui permet de scroll automatiquement la fenetre jusqu'au moment ou l'utilisateur lache le monstre
+     * la fenêtre tant que l'utilisateur déplace un monstre près des bords.
+     * @returns {void}
+     */
+    const tick = () => {
+      const velocity = getScrollVelocity(lastY);
+      if (velocity !== 0) {
+        window.scrollBy({ top: velocity, behavior: "instant" });
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    /**
+     * Déclenche la boucle tick
+     * @returns {void}
+     */
+    const onDragStart = () => {
+      rafId = requestAnimationFrame(tick);
+    };
+
+    /**
+     * Met fin à la boucle tick
+     * @returns {void}
+     */
+    const onDragEnd = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+    };
+
+    document.addEventListener("dragstart", onDragStart);
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("dragend", onDragEnd);
+    document.addEventListener("drop", onDragEnd);
+
+    return () => {
+      document.removeEventListener("dragstart", onDragStart);
+      document.removeEventListener("dragover", onDragOver);
+      document.removeEventListener("dragend", onDragEnd);
+      document.removeEventListener("drop", onDragEnd);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
 
   /**
    * Génère une image PNG de la tier list et la télécharge automatiquement.
@@ -47,16 +127,12 @@ export default function TierList() {
       const PADDING = 10;
       const TITLE_H = 48;
 
+      // Collecte les données de chaque tier
       const rows = Array.from(tierCards).map((card) => {
-        const label =
-          card.querySelector("[data-tier-label]")?.textContent || "";
-
-        // Résoudre la couleur CSS via getComputedStyle sur le label
         const labelEl = card.querySelector("[data-tier-label]");
-        const color = labelEl
-          ? getComputedStyle(labelEl).color // couleur résolue en rgb(...)
-          : "#888";
-
+        const label = labelEl?.textContent || "";
+        // Résoudre la couleur CSS via getComputedStyle (gère les var(--palette-xxx))
+        const color = labelEl ? getComputedStyle(labelEl).color : "#888";
         const icons = Array.from(
           card.querySelectorAll("[data-monster-icon]"),
         ).map((img) => img.src);
