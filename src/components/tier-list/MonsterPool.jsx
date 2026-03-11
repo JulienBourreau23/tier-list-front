@@ -68,6 +68,22 @@ const ELEMENTS_BY_TAB = {
   ],
 };
 
+/**
+ * @typedef {2|3|4|5} StarId
+ * Nombre d'étoiles naturelles d'un monstre.
+ */
+
+/**
+ * @typedef {Object} StarFilter
+ * @property {StarId} id      - Nombre d'étoiles (2, 3, 4 ou 5)
+ * @property {string} label   - Libellé affiché (ex: "4⭐")
+ */
+
+/**
+ * Map des filtres d'étoiles disponibles par onglet.
+ * Uniquement défini pour l'onglet "all".
+ * @type {Record<string, StarFilter[]>}
+ */
 const STARS_BY_TAB = {
   all: [
     { id: 2, label: "2⭐" },
@@ -166,6 +182,7 @@ export default function MonsterPool() {
   const { data, isLoading, isError } = useMonsters(activeTab);
   const [search, setSearch] = useState("");
   const [activeElement, setActiveElement] = useState(null);
+  /** @type {StarId|null} Nombre d'étoiles actif pour le filtre, null si aucun */
   const [activeStars, setActiveStars] = useState(
     activeTab === "all" ? 5 : null,
   );
@@ -200,6 +217,11 @@ export default function MonsterPool() {
     return list;
   }, [data, placedIds, activeElement, search, activeStars]);
 
+  /**
+   * Permet le filtre par element sélectionné
+   * @param {string} id - id de l'élément
+   * @returns {void}
+   */
   const handleElementToggle = (id) => {
     setActiveElement((prev) => (prev === id ? null : id));
   };
@@ -227,6 +249,15 @@ export default function MonsterPool() {
         /* ignore */
       }
     }
+  };
+  /**
+   *  Bascule le filtre par nombre d'étoiles — sélectionne le nombre cliqué,
+   *  ou le désélectionne s'il était déjà actif
+   * @param {StarId} id - nombre d'étoiles
+   * @returns {void}
+   */
+  const handleStarsToggle = (id) => {
+    setActiveStars((prev) => (prev === id ? null : id));
   };
 
   return (
@@ -282,9 +313,7 @@ export default function MonsterPool() {
               <button
                 key={s.id}
                 type="button"
-                onClick={() =>
-                  setActiveStars((prev) => (prev === s.id ? null : s.id))
-                }
+                onClick={() => handleStarsToggle(s.id)}
                 aria-pressed={activeStars === s.id}
                 className={cn(
                   "rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all duration-150",
