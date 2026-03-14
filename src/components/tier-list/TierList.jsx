@@ -21,9 +21,7 @@ const SCROLL_SPEED = 14;
  * @component
  */
 export default function TierList() {
-  const tiers = useTierListStore(
-    (state) => state.tiersByTab[state.activeTab] ?? [],
-  );
+  const tiers = useTierListStore((state) => state.tiers);
   const activeTab = useTierListStore((state) => state.activeTab);
   const addTier = useTierListStore((state) => state.addTier);
   const resetAll = useTierListStore((state) => state.resetAll);
