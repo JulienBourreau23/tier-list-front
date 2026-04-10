@@ -1,3 +1,14 @@
+/**
+ * REFACTO COMPLÈTE : TIERS GLOBAUX
+ *
+ * Fichier : src/lib/tier-list/store.js
+ *
+ * Changements :
+ * - placedMonstersByTab → placedMonsters (global)
+ * - Migration v3 → v4
+ * - Suppression de toute logique "par onglet" pour les monstres
+ */
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { PALETTE, TABS } from "@/lib/tier-list/constants";
@@ -30,17 +41,17 @@ import { getNextId, makeTiers } from "@/lib/tier-list/utils";
 
 /**
  * @typedef {Object} TierListState
- * @property {string}                                   activeTab             - Id de l'onglet actif (ex: "nat4-fwe")
- * @property {Tier[]}                                   tiers                 - Liste globale des tiers (partagée entre tous les onglets)
- * @property {Record<string, Record<number, number[]>>} placedMonstersByTab   - Monstres par onglet puis par tier: { tabId: { tierId: [monsterIds] } }
- * @property {number|null}                              editingId             - Id du tier en cours d'édition, null si aucun
- * @property {string}                                   editLabel             - Label temporaire du tier en cours d'édition
- * @property {PaletteEntry}                             editColor             - Couleur temporaire du tier en cours d'édition
- * @property {boolean}                                  showMonsterNames      - Afficher ou masquer les noms des monstres
+ * @property {string}                 activeTab        - Id de l'onglet actif (ex: "nat4-fwe")
+ * @property {Tier[]}                 tiers            - Liste globale des tiers (partagée)
+ * @property {Record<number, number[]>} placedMonsters - Monstres par tier: { tierId: [monsterIds] }
+ * @property {number|null}            editingId        - Id du tier en cours d'édition
+ * @property {string}                 editLabel        - Label temporaire
+ * @property {PaletteEntry}           editColor        - Couleur temporaire
+ * @property {boolean}                showMonsterNames - Afficher les noms
  */
 
 /**
- * Migre l'ancien format localStorage vers le nouveau.
+ * Migre l'ancien format vers le nouveau.
  * @param {any} persistedState - État chargé depuis localStorage
  * @returns {any} État migré
  */
@@ -51,39 +62,32 @@ function migrateStorage(persistedState) {
 
   // Migration 1: tiersByTab → tiers global
   if (migrated.tiersByTab && !migrated.tiers) {
-    // Prend les tiers du premier onglet comme référence
     const firstTab = TABS[0].id;
     migrated.tiers = migrated.tiersByTab[firstTab] || makeTiers();
     delete migrated.tiersByTab;
   }
 
-  // Migration 2: placedMonsters → placedMonstersByTab (ancien format : objets → IDs)
-  if (migrated.placedMonsters && !migrated.placedMonstersByTab) {
-    const firstEntry = Object.values(migrated.placedMonsters)[0]?.[0];
+  // Migration 2: placedMonstersByTab → placedMonsters global
+  if (migrated.placedMonstersByTab && !migrated.placedMonsters) {
+    // Fusionne TOUS les onglets en un seul objet
+    const merged = {};
 
-    // Détecte si ancien format (objets au lieu d'IDs)
-    const isOldFormat =
-      firstEntry && typeof firstEntry === "object" && firstEntry.com2us_id;
+    for (const tabMonsters of Object.values(migrated.placedMonstersByTab)) {
+      for (const [tierId, monsterIds] of Object.entries(tabMonsters)) {
+        const tid = Number(tierId);
+        if (!merged[tid]) merged[tid] = [];
 
-    // Initialise placedMonstersByTab pour chaque onglet
-    migrated.placedMonstersByTab = {};
-    for (const tab of TABS) {
-      if (isOldFormat) {
-        // Convertit objets → IDs
-        migrated.placedMonstersByTab[tab.id] = Object.fromEntries(
-          Object.entries(migrated.placedMonsters).map(([tid, monsters]) => [
-            tid,
-            monsters.map((m) => m.com2us_id),
-          ]),
-        );
-      } else {
-        // Copie les IDs directement
-        migrated.placedMonstersByTab[tab.id] = {
-          ...migrated.placedMonsters,
-        };
+        // Ajoute les IDs sans doublons
+        for (const id of monsterIds) {
+          if (!merged[tid].includes(id)) {
+            merged[tid].push(id);
+          }
+        }
       }
     }
-    delete migrated.placedMonsters;
+
+    migrated.placedMonsters = merged;
+    delete migrated.placedMonstersByTab;
   }
 
   return migrated;
@@ -92,9 +96,9 @@ function migrateStorage(persistedState) {
 /**
  * Store Zustand global de la tier list.
  *
- * Architecture :
+ * Architecture simplifiée :
  * - **Tiers globaux** : partagés entre tous les onglets
- * - **Monstres par onglet** : chaque onglet a ses propres placements
+ * - **Monstres globaux** : un monstre placé = visible partout
  *
  * @type {import('zustand').UseBoundStore<import('zustand').StoreApi<TierListState>>}
  */
@@ -109,8 +113,8 @@ export const useTierListStore = create(
       /** @type {Tier[]} Tiers globaux partagés entre tous les onglets */
       tiers: makeTiers(),
 
-      /** @type {Record<string, Record<number, number[]>>} Monstres par onglet puis par tier */
-      placedMonstersByTab: Object.fromEntries(TABS.map((t) => [t.id, {}])),
+      /** @type {Record<number, number[]>} Monstres globaux par tier */
+      placedMonsters: {},
 
       /** @type {number|null} Id du tier en cours d'édition */
       editingId: null,
@@ -136,7 +140,7 @@ export const useTierListStore = create(
       // ── Actions tiers ──────────────────────────────────────────────
 
       /**
-       * Ajoute un nouveau tier (partagé entre tous les onglets).
+       * Ajoute un nouveau tier.
        * @returns {void}
        */
       addTier: () => {
@@ -151,30 +155,19 @@ export const useTierListStore = create(
       },
 
       /**
-       * Supprime un tier (global, impacte tous les onglets).
+       * Supprime un tier.
        * @param {number} id - L'id du tier à supprimer
        * @returns {void}
        */
       deleteTier: (id) => {
         set((state) => {
-          // Retire le tier de la liste globale
           const newTiers = state.tiers.filter((t) => t.id !== id);
-
-          // Retire les monstres de ce tier dans TOUS les onglets
-          const newPlacedMonstersByTab = {};
-          for (const [tabId, tierMonsters] of Object.entries(
-            state.placedMonstersByTab,
-          )) {
-            newPlacedMonstersByTab[tabId] = Object.fromEntries(
-              Object.entries(tierMonsters).filter(
-                ([tid]) => Number(tid) !== id,
-              ),
-            );
-          }
+          const newPlacedMonsters = { ...state.placedMonsters };
+          delete newPlacedMonsters[id];
 
           return {
             tiers: newTiers,
-            placedMonstersByTab: newPlacedMonstersByTab,
+            placedMonsters: newPlacedMonsters,
             editingId: state.editingId === id ? null : state.editingId,
           };
         });
@@ -266,7 +259,7 @@ export const useTierListStore = create(
       // ── Actions monstres ───────────────────────────────────────────
 
       /**
-       * Place un monstre dans un tier de l'onglet actif.
+       * Place un monstre dans un tier.
        * @param {Monster} monsterObj - Le monstre à placer
        * @param {number|string} tierId - L'id du tier cible
        * @param {number|null} index - Position d'insertion
@@ -274,30 +267,23 @@ export const useTierListStore = create(
        */
       placeMonster: (monsterObj, tierId, index = null) => {
         const id = monsterObj.com2us_id;
-        const activeTab = get().activeTab;
+        const tid = Number(tierId);
 
         set((state) => {
-          const tabMonsters = state.placedMonstersByTab[activeTab] ?? {};
-
-          // Retire le monstre de tous les tiers de cet onglet
-          const cleaned = Object.fromEntries(
-            Object.entries(tabMonsters).map(([tid, ids]) => [
-              tid,
-              ids.filter((mId) => mId !== id),
-            ]),
-          );
+          // Retire le monstre de tous les tiers
+          const cleaned = {};
+          for (const [t, ids] of Object.entries(state.placedMonsters)) {
+            cleaned[t] = ids.filter((mId) => mId !== id);
+          }
 
           // Ajoute à la position demandée
-          const list = [...(cleaned[tierId] ?? [])];
+          const list = [...(cleaned[tid] ?? [])];
           list.splice(index ?? list.length, 0, id);
 
           return {
-            placedMonstersByTab: {
-              ...state.placedMonstersByTab,
-              [activeTab]: {
-                ...cleaned,
-                [tierId]: list,
-              },
+            placedMonsters: {
+              ...cleaned,
+              [tid]: list,
             },
           };
         });
@@ -312,12 +298,11 @@ export const useTierListStore = create(
        */
       reorderMonster: (com2us_id, tierId, toIndex) => {
         const id = Number(com2us_id);
-        const activeTab = get().activeTab;
+        const tid = Number(tierId);
 
         set((state) => {
-          const tabMonsters = state.placedMonstersByTab[activeTab] ?? {};
-          const list = [...(tabMonsters[tierId] ?? [])];
-          const fromIndex = list.findIndex((mId) => mId === id);
+          const list = [...(state.placedMonsters[tid] ?? [])];
+          const fromIndex = list.indexOf(id);
 
           if (fromIndex === -1 || fromIndex === toIndex) return {};
 
@@ -325,41 +310,28 @@ export const useTierListStore = create(
           list.splice(toIndex, 0, item);
 
           return {
-            placedMonstersByTab: {
-              ...state.placedMonstersByTab,
-              [activeTab]: {
-                ...tabMonsters,
-                [tierId]: list,
-              },
+            placedMonsters: {
+              ...state.placedMonsters,
+              [tid]: list,
             },
           };
         });
       },
 
       /**
-       * Retire un monstre de tous les tiers de l'onglet actif.
+       * Retire un monstre de tous les tiers.
        * @param {number|string} com2us_id
        * @returns {void}
        */
       removeMonster: (com2us_id) => {
         const id = Number(com2us_id);
-        const activeTab = get().activeTab;
 
         set((state) => {
-          const tabMonsters = state.placedMonstersByTab[activeTab] ?? {};
-          const cleaned = Object.fromEntries(
-            Object.entries(tabMonsters).map(([tid, ids]) => [
-              tid,
-              ids.filter((mId) => mId !== id),
-            ]),
-          );
-
-          return {
-            placedMonstersByTab: {
-              ...state.placedMonstersByTab,
-              [activeTab]: cleaned,
-            },
-          };
+          const cleaned = {};
+          for (const [tid, ids] of Object.entries(state.placedMonsters)) {
+            cleaned[tid] = ids.filter((mId) => mId !== id);
+          }
+          return { placedMonsters: cleaned };
         });
       },
 
@@ -381,14 +353,14 @@ export const useTierListStore = create(
       resetAll: () =>
         set({
           tiers: makeTiers(),
-          placedMonstersByTab: Object.fromEntries(TABS.map((t) => [t.id, {}])),
+          placedMonsters: {},
           editingId: null,
           showMonsterNames: true,
         }),
     }),
     {
-      name: "tier-list-storage-v3", // ← Nouvelle version
-      version: 3,
+      name: "tier-list-storage-v4", // ✅ Nouvelle version
+      version: 4,
       migrate: migrateStorage,
     },
   ),

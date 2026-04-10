@@ -18,8 +18,21 @@ export async function GET(_request, { params }) {
   }
 
   const imageBuffer = await res.arrayBuffer();
+
+  // ✅ NOUVEAU : Récupère les headers de cache depuis FastAPI
+  const cacheControl = res.headers.get("cache-control");
+  const etag = res.headers.get("etag");
+
+  const responseHeaders = {
+    "Content-Type": "image/png",
+  };
+
+  // ✅ Transmet les headers de cache au navigateur
+  if (cacheControl) responseHeaders["Cache-Control"] = cacheControl;
+  if (etag) responseHeaders.ETag = etag;
+
   return new Response(imageBuffer, {
     status: 200,
-    headers: { "Content-Type": "image/png" },
+    headers: responseHeaders,
   });
 }

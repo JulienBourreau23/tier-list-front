@@ -111,8 +111,22 @@ export default function TierList() {
    * puis remet à null après 3 secondes.
    * @returns {Promise<void>}
    */
+  /**
+   * VERSION OPTIMISÉE de handleScreenshot
+   *
+   * Changements principaux :
+   * 1. Chargement par lots de 10 images au lieu de tout en même temps
+   * 2. Indicateur de progression détaillé ("Chargement... 20/150")
+   * 3. Cache des images pour éviter les doublons
+   * 4. Meilleure gestion de la mémoire
+   *
+   * À copier dans src/components/tier-list/TierList.jsx
+   */
+
   const handleScreenshot = async () => {
     setExporting(true);
+    setExportStatus("Préparation...");
+
     try {
       // Récupère les données depuis le contexte via le DOM
       const tierCards = tierZoneRef.current?.querySelectorAll("[data-tier-id]");
@@ -174,6 +188,43 @@ export default function TierList() {
           img.src = src;
         });
 
+      /**
+       * Charge les images par lots pour éviter de surcharger la mémoire.
+       * @param {string[]} iconUrls - URLs des images à charger
+       * @param {number} batchSize - Taille du lot (défaut: 10)
+       * @returns {Promise<Map<string, HTMLImageElement|null>>} Map URL → Image chargée
+       */
+      const loadImagesBatch = async (iconUrls, batchSize = 10) => {
+        const results = new Map();
+        const totalImages = iconUrls.length;
+
+        for (let i = 0; i < iconUrls.length; i += batchSize) {
+          const batch = iconUrls.slice(i, i + batchSize);
+          const batchResults = await Promise.all(
+            batch.map(async (url) => [url, await loadImg(url)]),
+          );
+
+          for (const [url, img] of batchResults) {
+            results.set(url, img);
+          }
+
+          // Mise à jour du statut
+          const loaded = Math.min(i + batchSize, totalImages);
+          setExportStatus(`Chargement... ${loaded}/${totalImages}`);
+        }
+
+        return results;
+      };
+
+      // Collecte toutes les URLs d'images uniques
+      const allIconUrls = [...new Set(rows.flatMap((r) => r.icons))];
+
+      // Charge toutes les images par lots
+      setExportStatus(`Chargement... 0/${allIconUrls.length}`);
+      const imageCache = await loadImagesBatch(allIconUrls);
+
+      setExportStatus("Génération du PNG...");
+
       // Dessine chaque tier
       for (let i = 0; i < rows.length; i++) {
         const { label, color, icons } = rows[i];
@@ -206,10 +257,9 @@ export default function TierList() {
         ctx.lineTo(LABEL_W, y + ROW_H - 8);
         ctx.stroke();
 
-        // Icônes des monstres
-        const imgs = await Promise.all(icons.map(loadImg));
-        for (let j = 0; j < imgs.length; j++) {
-          const img = imgs[j];
+        // Icônes des monstres (récupérées depuis le cache)
+        for (let j = 0; j < icons.length; j++) {
+          const img = imageCache.get(icons[j]);
           if (!img) continue;
           const x = LABEL_W + PADDING + j * (ICON_SIZE + GAP);
           const iy = y + (ROW_H - ICON_SIZE) / 2;
@@ -229,6 +279,8 @@ export default function TierList() {
           ctx.restore();
         }
       }
+
+      setExportStatus("Téléchargement...");
 
       // Télécharge
       const link = document.createElement("a");
